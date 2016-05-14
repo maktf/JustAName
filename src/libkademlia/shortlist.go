@@ -1,50 +1,100 @@
 package libkademlia
 
 type ShortList struct{
-	active []*Contact
-	candlist map(string, *Contact)
+	active map[string]bool
+	list map[string]*Contact
+	calling map[string]bool
 	shortestDistance int
-	removed map(string, *Contact)
+	closestNode []string
+	removed map[string]bool
+	target *Contact
 }
 
 func (shortList *ShortList) initializeShortList(localContacts []*Contact, target *Contact){
 	shortList.shortestDistance = -1
-	shortList.count = len(localContacts)
-	shortList.candlist = make(map(string, *Contact))
+	shortList.calling = make(map[string]bool)
+	shortlist.active = make(map[string]bool)
+	shortList.list = make(map[string]*Contact)
+	shortList.target = target
+	shortList.removed = make(make[string]bool)
+	closestNode = make([]string)
 	for _, contact := range localContacts{
-		shortList.list = append(shortList.list, contact)
+		shortList.list[contact.NodeID.AsString()] = contact
 		dis := distance(contact.NodeID, target.NodeID)
 		if shortList.shortestDistance < dis{
 			shortList.shortestDistance = dis
 		}
-		shortList.flag = append(shortList.flag, 0)
 	}
 }
 
 //To insert a contact into the shortlist, 
-//if the contact's distance is larger than the shortest one, the contact will not be added
-//false: Unchanged
+//if the closestNode is changed, return true. Else, return false
 func (shortList *ShortList) updateActiveContact(newContact *Contact, contactSender *Contact) bool{
+	dis := distance(newContact.NodeID, shortList.target.NodeID)
+	id := newContact.NodeID.AsString()
+	if _,ok := shortList.list[id]; ok == false{
+		shortList.list[id] = newContact
+		if dis>shortList.shortestDistance{
+			closestNode = make([]string)
+			closestNode = append(closestNode,id)
+			shortList.shortestDistance = dis
+			return true
+		}else if dis == shortList.shortestDistance{
+			closestNode = append(closestNode, id)
+			return true
+		}
+	}
+	return false
+}
 
+func (shortList *ShortList) setActive(target *Contact){
+	id := contactSender.NodeID.AsString()
+	shortList.active[id] = true
+	delete(shortList.calling, id)
 }
 
 
 //to remove a certain contact
 func (shortList *ShortList) removeInactive(target *Contact) bool{
-
+	id := contactSender.NodeID.AsString()
+	shortList.removed[target.NodeID.AsString()] = true
+	delete(shortList.calling, id)
+	return true
 }
 
 //to check whether k contacts has been probed and active
 func (shortList *ShortList) checkActive() bool{
-
+	if len(shortList.active) == k{
+		return true
+	}
+	return false
 }
 
 //return alpha contacts which has not been contacted, maybe fewer than alpha
 func (shortList *ShortList) getAlphaNotContacted() []*Contact{
 	res := make([]*Contact)
-	for _,v : range candlist{
-
+	i := 0
+	for j:= 0; i<alpha && j<len(shortList.closestNode);j++{
+		if _,ok := shortList.calling[shortList.closestNode[j]]; ok == false{
+			res = append(res, shortList.list[shortList.closestNode[j]])
+			shortList.calling[shortList.closestNode[j]] = true
+			i++
+		}
+	} 
+	if(i<alpha){
+		for id, contact := range shortList.list{
+			_, ok_remove := shortList.removed[id]
+			_, ok_calling := shortList.calling[id]
+			_, ok_active := shortList.active[id]
+			if(ok_active == false && ok_calling == false && ok_remove == false){
+				res = append(res, contact)
+			}
+			i++
+			if(i>=alpha)
+				break
+		}
 	}
+	return res
 
 }
 
