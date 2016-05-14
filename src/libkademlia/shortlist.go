@@ -22,6 +22,20 @@ func (shortList *ShortList) initializeShortList(localContacts []*Contact, target
 	}
 }
 
-//func (shortList *ShortList) updateActiveContact(newContact *Contact){
+//To insert a contact into the shortlist, 
+//if the contact's distance is larger than the shortest one, the contact will not be added
+func (shortList *ShortList) updateActiveContact(newContact *Contact) bool{
 
-//}
+}
+
+
+//to remove a certain contact
+func (shortList *ShortList) removeInactive(target *Contact) bool{
+
+}
+
+//to check whether either of the two conditions is met
+func (shortList *ShortList) checkSucceed() bool{
+
+}
+
