@@ -98,3 +98,7 @@ func (shortList *ShortList) getAlphaNotContacted() []*Contact{
 
 }
 
+func (shortList *ShortList) getClosestNodes()[]*Contact{
+	return shortList.closestNode;
+}
+
