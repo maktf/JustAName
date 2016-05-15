@@ -127,11 +127,12 @@ func (k *Kademlia) DoPing(host net.IP, port uint16) (*Contact, error) {
 		log.Fatal("dialing:", err)
 	}
 	var reply PongMessage
-	/*fmt.Println("========================")
-	for i:= 0;i<IDBytes;i++{
-		fmt.Println(int(k.SelfContact.NodeID[i]))
-	}
-	fmt.Println("========================")*/
+	
+	go func() {
+		time.Sleep(time.Millisecond * 300)
+		client.Close()
+	}()
+	
 	err = client.Call("KademliaRPC.Ping", PingMessage{k.SelfContact, NewRandomID()}, &reply)
 	//fmt.Println(reply.MsgID)
 	if err == nil {
@@ -149,11 +150,7 @@ func (k *Kademlia) DoStore(contact *Contact, key ID, value []byte) error {
 		log.Fatal("dialing:", err)
 	}
 	var reply StoreResult
-	/*fmt.Println("========================")
-	for i:= 0;i<IDBytes;i++{
-		fmt.Println(int(k.SelfContact.NodeID[i]))
-	}
-	fmt.Println("========================")*/
+	
 	err = client.Call("KademliaRPC.Store", StoreRequest{k.SelfContact, NewRandomID(),key,value}, &reply)
 	//fmt.Println(reply.MsgID)
 	if err == nil {
@@ -175,6 +172,12 @@ func (k *Kademlia) DoFindNode(contact *Contact, searchKey ID) ([]Contact, error)
 	} 
 	findNodeRequest := FindNodeRequest{k.SelfContact, NewRandomID(), searchKey}
 	var findNodeResult FindNodeResult
+	
+	go func() {
+		time.Sleep(time.Millisecond * 300)
+		client.Close()
+	}()
+	
 	err = client.Call("KademliaRPC.FindNode", findNodeRequest, &findNodeResult)
 	if err != nil {
 		return nil, &CommandFailed{
@@ -185,7 +188,8 @@ func (k *Kademlia) DoFindNode(contact *Contact, searchKey ID) ([]Contact, error)
 	}	
 }
 
-func (k *Kademlia) DoFindValue(contact *Contact,searchKey ID) (value []byte, contacts []Contact, err error) {
+func (k *Kademlia) DoFindValue(contact *Contact,
+	searchKey ID) (value []byte, contacts []Contact, err error) {
 	// TODO: Implement
 	//fmt.Println(host.String()+":"+strconv.Itoa(int(port)))
 
@@ -196,6 +200,11 @@ func (k *Kademlia) DoFindValue(contact *Contact,searchKey ID) (value []byte, con
 	}
 	var res FindValueResult
 
+    go func() {
+		time.Sleep(time.Millisecond * 300)
+		client.Close()
+	}()
+    
 	err = client.Call("KademliaRPC.FindValue", FindValueRequest{k.SelfContact, NewRandomID(), searchKey}, &res)
 	//fmt.Println(res.MsgID)
 	if err == nil {
@@ -220,11 +229,9 @@ func (k *Kademlia) LocalFindValue(searchKey ID) ([]byte, error) {
 	}	
 }
 
-// For project 2!
-
 func (k *Kademlia) FindNodeRoutine(ct Contact, id ID, chnn chan FindNodeResult) {
 	c, err := k.DoFindNode(&ct, id)
-	chnn <- FindNodeRequest{ct.NodeID, c, err}
+	chnn <- FindNodeResult{ct.NodeID, c, err}
 }
 // For project 2!
 func (k *Kademlia) DoIterativeFindNode(id ID) ([]string, error) {
@@ -243,7 +250,7 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]string, error) {
 		for !sl.checkActive() && !nocloser {
 			f3 := sl.getAlphaNotContacted()
 			for _, c := range f3 {
-				go FindNodeRoutine(*c, id, chnn)
+				go k.FindNodeRoutine(*c, id, chnn)
 			}
 			
 			count = 0
@@ -254,12 +261,12 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]string, error) {
 					     if fnr.Err != nil {
 					     	sl.removeInactive(&Contact{fnr.MsgID, nil, 0})
 					     } else {
-					     	for ct := range fnr.Nodes {
+					     	for _, ct := range fnr.Nodes {
 						     	if sl.updateActiveContact(&ct) {
 						     		nocloser = false
 						     	}        
 					     	}
-						sl.setActive(&Contact{fnr.MsgID, nil, 0})
+						    sl.setActive(&Contact{fnr.MsgID, nil, 0})
 					     }
 					     count++
 				    default:
@@ -270,11 +277,11 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]string, error) {
 			}
 		}
 		
-		if !s1.checkActive() {
+		if !sl.checkActive() {
 			cs_a = sl.getAllNotContacted()
 			count = 0
 			for _, c := range cs_a {
-				go FindNodeRoutine(*c, id, chnn)
+				go k.FindNodeRoutine(*c, id, chnn)
 			}
 			
 			for !sl.checkActive() && count < len(cs_a) {
@@ -288,7 +295,7 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]string, error) {
 				}
 			}
 		}
-		return sl.getAllNotContacted, nil
+		return sl.getActiveNodes(), nil
 		//return a string slice that contains the ID of the k closest nodes
 	} else {
 		return nil, &CommandFailed{"Timeout"} 
@@ -302,10 +309,11 @@ func (k *Kademlia) StoreValueRoutine(ct Contact, key ID, value []byte){
 func (k *Kademlia) DoIterativeStore(key ID, value []byte) (string, error) {
 	cs, err := k.DoIterativeFindNode(key)
 	if err != nil {
-		return nil, &CommandFailed{"Unable to store key-value pairs iteratively"}
+		return "", &CommandFailed{"Unable to store key-value pairs iteratively"}
 	} else {
-		for _, c := cs {
-			go StoreValueRoutine(Contact{[]byte(c), nil, 0}, key, value)
+		for _, c := range cs {
+			i, _ := IDFromString(c)
+			go k.StoreValueRoutine(Contact{i, nil, 0}, key, value)
 		}
 		return cs[len(cs)-1], nil
 	}
@@ -320,7 +328,7 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 	vs, cs, err := k.DoFindValue(&k.SelfContact, key)	//find value at local
 	if err == nil {		
 		if vs != nil {
-			return vs, nil                              //the value is found at local
+			return k.SelfContact.NodeID.AsString(), vs, nil                              //the value is found at local
 		} else {
 			var cs_a []*Contact
 			for _, c := range cs {
@@ -335,7 +343,7 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 			for !sl.checkActive() && !nocloser {
 				f3 := sl.getAlphaNotContacted()
 				for _, c := range f3 {
-					go k.FindValueRoutine(c, key, chnn)  //find value at the first alpha nodes
+					go k.FindValueRoutine(*c, key, chnn)  //find value at the first alpha nodes
 				}
 				
 				count = 0
@@ -348,11 +356,12 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 						     } else if fvr.Value != nil {
 						     	acs := sl.getActiveNodes()
 						     	for _, ac := range acs {
-						     		go StoreValueRoutine(Contact{[]byte(ac), nil, 0}, key, fvr.Value)
+						     		i, _ := IDFromString(ac)
+						     		go k.StoreValueRoutine(Contact{i, nil, 0}, key, fvr.Value)
 						     	}
-						     	return string(fvr.MsgID), fvr.Value, nil
+						     	return fvr.MsgID.AsString(), fvr.Value, nil
 						     } else {
-						     	for ct := range fvr.Nodes {
+						     	for _, ct := range fvr.Nodes {
 						     		if sl.updateActiveContact(&ct) {     //what about the active nodes?
 						     			nocloser = false    				     	
 						     		} 
@@ -369,11 +378,11 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 				}
 			}
 			
-			if !s1.checkActive() {
+			if !sl.checkActive() {
 				cs_a = sl.getAllNotContacted()
 				count = 0
 				for _, c := range cs_a {
-					go FindValueRoutine(*c, id, chnn)
+					go k.FindValueRoutine(*c, key, chnn)
 				}
 				
 				for !sl.checkActive() && count < len(cs_a) {
@@ -392,7 +401,7 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 			// can't find the value, return the id of the closest node and a key not found message 
 		}
 	} else {
-		return string(k.SelfContact.NodeID), nil, &CommandFailed{"Timeout"}
+		return k.SelfContact.NodeID.AsString(), nil, &CommandFailed{"Timeout"}
 	}	
 }
 
