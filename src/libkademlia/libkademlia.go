@@ -226,6 +226,7 @@ func (k *Kademlia) LocalFindValue(searchKey ID) ([]byte, error) {
 
 // For project 2!
 func (k *Kademlia) DoIterativeFindNode(id ID) ([]Contact, error) {
+	
 	return nil, &CommandFailed{"Not implemented"}
 }
 func (k *Kademlia) DoIterativeStore(key ID, value []byte) ([]Contact, error) {

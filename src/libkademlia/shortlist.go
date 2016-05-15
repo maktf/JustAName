@@ -7,10 +7,10 @@ type ShortList struct{
 	shortestDistance int
 	closestNode []string
 	removed map[string]bool
-	target *Contact
+	target ID
 }
 
-func (shortList *ShortList) initializeShortList(localContacts []*Contact, target *Contact){
+func (shortList *ShortList) initializeShortList(localContacts []*Contact, target ID){
 	shortList.shortestDistance = -1
 	shortList.calling = make(map[string]bool)
 	shortlist.active = make(map[string]bool)
@@ -20,7 +20,7 @@ func (shortList *ShortList) initializeShortList(localContacts []*Contact, target
 	closestNode = make([]string)
 	for _, contact := range localContacts{
 		shortList.list[contact.NodeID.AsString()] = contact
-		dis := distance(contact.NodeID, target.NodeID)
+		dis := distance(contact.NodeID, target)
 		if shortList.shortestDistance < dis{
 			shortList.shortestDistance = dis
 		}
@@ -30,7 +30,7 @@ func (shortList *ShortList) initializeShortList(localContacts []*Contact, target
 //To insert a contact into the shortlist, 
 //if the closestNode is changed, return true. Else, return false
 func (shortList *ShortList) updateActiveContact(newContact *Contact, contactSender *Contact) bool{
-	dis := distance(newContact.NodeID, shortList.target.NodeID)
+	dis := distance(newContact.NodeID, shortList.target)
 	id := newContact.NodeID.AsString()
 	if _,ok := shortList.list[id]; ok == false{
 		shortList.list[id] = newContact
@@ -48,7 +48,7 @@ func (shortList *ShortList) updateActiveContact(newContact *Contact, contactSend
 }
 
 func (shortList *ShortList) setActive(target *Contact){
-	id := contactSender.NodeID.AsString()
+	id := target.NodeID.AsString()
 	shortList.active[id] = true
 	delete(shortList.calling, id)
 }
@@ -56,7 +56,7 @@ func (shortList *ShortList) setActive(target *Contact){
 
 //to remove a certain contact
 func (shortList *ShortList) removeInactive(target *Contact) bool{
-	id := contactSender.NodeID.AsString()
+	id := target.NodeID.AsString()
 	shortList.removed[target.NodeID.AsString()] = true
 	delete(shortList.calling, id)
 	return true
