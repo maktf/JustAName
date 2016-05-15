@@ -234,7 +234,7 @@ func (k *Kademlia) FindNodeRoutine(ct Contact, id ID, chnn chan FindNodeResult) 
 	chnn <- FindNodeResult{ct.NodeID, c, err}
 }
 // For project 2!
-func (k *Kademlia) DoIterativeFindNode(id ID) ([]string, error) {
+func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
 	cs, err := k.DoFindNode(&k.SelfContact, id)
 	if err == nil{
 		var cs_a []*Contact
@@ -252,10 +252,9 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]string, error) {
 			for _, c := range f3 {
 				go k.FindNodeRoutine(*c, id, chnn)
 			}
-			
 			count = 0
 			nocloser = true
-			for {
+			for count < len(f3) {
 				select {
 					case fnr := <- chnn:
 					     if fnr.Err != nil {
@@ -266,16 +265,14 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]string, error) {
 						     		nocloser = false
 						     	}        
 					     	}
-						    sl.setActive(&Contact{fnr.MsgID, nil, 0})
+						sl.setActive(&Contact{fnr.MsgID, nil, 0})
 					     }
 					     count++
 				    default:
-				         if count == len(f3) {
-				         	break
-				         }
 				}
 			}
 		}
+		
 		
 		if !sl.checkActive() {
 			cs_a = sl.getAllNotContacted()
@@ -312,10 +309,9 @@ func (k *Kademlia) DoIterativeStore(key ID, value []byte) (string, error) {
 		return "", &CommandFailed{"Unable to store key-value pairs iteratively"}
 	} else {
 		for _, c := range cs {
-			i, _ := IDFromString(c)
-			go k.StoreValueRoutine(Contact{i, nil, 0}, key, value)
+			go k.StoreValueRoutine(*c, key, value)
 		}
-		return cs[len(cs)-1], nil
+		return (*cs[len(cs)-1]).NodeID.AsString(), nil
 	}
 }
 
@@ -348,7 +344,7 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 				
 				count = 0
 				nocloser = true
-				for {
+				for count < len(f3) {
 					select {
 						case fvr := <- chnn:
 						     if fvr.Err != nil {
@@ -356,8 +352,7 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 						     } else if fvr.Value != nil {
 						     	acs := sl.getActiveNodes()
 						     	for _, ac := range acs {
-						     		i, _ := IDFromString(ac)
-						     		go k.StoreValueRoutine(Contact{i, nil, 0}, key, fvr.Value)
+						     		go k.StoreValueRoutine(*ac, key, fvr.Value)
 						     	}
 						     	return fvr.MsgID.AsString(), fvr.Value, nil
 						     } else {
@@ -371,9 +366,6 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 						     count++
 						     
 					    default:                                       
-					         if count == len(f3) {
-					         	break
-					         }
 					}
 				}
 			}
@@ -387,9 +379,9 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 				
 				for !sl.checkActive() && count < len(cs_a) {
 					select {
-						case fnr := <- chnn:
-						     if fnr.Err == nil {
-						     	sl.setActive(&Contact{fnr.MsgID, nil, 0})
+						case fvr := <- chnn:
+						     if fvr.Err == nil {
+						     	sl.setActive(&Contact{fvr.MsgID, nil, 0})
 					         }
 					         count++
 				        default:
