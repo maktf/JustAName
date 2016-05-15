@@ -339,7 +339,11 @@ func executeLine(k *libkademlia.Kademlia, line string) (response string) {
 		if err != nil {
 			response = fmt.Sprintf("ERR: %s", err)
 		} else {
-			response = fmt.Sprintf("OK: Got %d contacts", len(contacts))
+			var rep string
+			for _, c := range contacts {
+				rep += c + "\n"
+			}
+			response = fmt.Sprintf("OK: Got %d contacts:\n%s", len(contacts), rep)
 		}
 
 	case toks[0] == "iterativeStore":
@@ -353,11 +357,11 @@ func executeLine(k *libkademlia.Kademlia, line string) (response string) {
 			response = "ERR: Provided an invalid key (" + toks[1] + ")"
 			return
 		}
-		contacts, err := k.DoIterativeStore(key, []byte(toks[2]))
+		id, err := k.DoIterativeStore(key, []byte(toks[2]))
 		if err != nil {
 			response = fmt.Sprintf("ERR: %s", err)
 		} else {
-			response = fmt.Sprintf("OK: Stored value on %d contacts", len(contacts))
+			response = fmt.Sprintf("OK: Finally stored value on %s contacts", id)
 		}
 
 	case toks[0] == "iterativeFindValue":
@@ -371,11 +375,11 @@ func executeLine(k *libkademlia.Kademlia, line string) (response string) {
 			response = "ERR: Provided an invalid key (" + toks[1] + ")"
 			return
 		}
-		value, err := k.DoIterativeFindValue(key)
+		id, value, err := k.DoIterativeFindValue(key)
 		if err != nil {
 			response = fmt.Sprintf("ERR: %s", err)
 		} else {
-			response = fmt.Sprintf("OK: Found value %s", value)
+			response = fmt.Sprintf("OK: Found value %s at %s", value, id)
 		}
 
 	default:
