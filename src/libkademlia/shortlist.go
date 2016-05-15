@@ -29,7 +29,7 @@ func (shortList *ShortList) initializeShortList(localContacts []*Contact, target
 
 //To insert a contact into the shortlist, 
 //if the closestNode is changed, return true. Else, return false
-func (shortList *ShortList) updateActiveContact(newContact *Contact, contactSender *Contact) bool{
+func (shortList *ShortList) updateActiveContact(newContact *Contact) bool{
 	dis := distance(newContact.NodeID, shortList.target)
 	id := newContact.NodeID.AsString()
 	if _,ok := shortList.list[id]; ok == false{
@@ -49,7 +49,9 @@ func (shortList *ShortList) updateActiveContact(newContact *Contact, contactSend
 
 func (shortList *ShortList) setActive(target *Contact){
 	id := target.NodeID.AsString()
-	shortList.active[id] = true
+	if len(shortList.active) < IDBytes{
+		shortList.active[id] = true
+	}
 	delete(shortList.calling, id)
 }
 
