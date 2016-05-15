@@ -196,7 +196,7 @@ func (kb *KBuckets) FindKClosest(key ID,senderId ID) *KResult{
 	i := IDBytes
 	res.contacts = make([]*Contact,0,IDBytes)
 	temp := dis-1
-	if dis == 160 && !senderId.Equals(kb.Kademlia.SelfContact){
+	if dis == 160 && !senderId.Equals(kb.Kademlia.SelfContact.NodeID){
 		res.contacts = append(res.contacts, &kb.Kademlia.SelfContact)
 		i--
 	}

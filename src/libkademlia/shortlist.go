@@ -101,10 +101,10 @@ func (shortList *ShortList) getAlphaNotContacted() []*Contact{
 
 }
 
-func (shortList *ShortList) getActiveNodes() []string{
-	res := make([]string,0)
+func (shortList *ShortList) getActiveNodes() []*Contact{
+	res := make([]*Contact,0)
 	for id := range shortList.active{
-		res = append(res, id)
+		res = append(res, shortList.list[id])
 	}
 	return res
 }
