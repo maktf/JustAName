@@ -224,16 +224,125 @@ func (k *Kademlia) LocalFindValue(searchKey ID) ([]byte, error) {
 	}	
 }
 
+func (k *Kademlia) FindNodeRoutine(ct Contact, id ID, chnn chan FindNodeResult) {
+	c, err := k.DoFindNode(&ct, id)
+	chnn <- FindNodeRequest{ct.NodeID, c, err}
+}
 // For project 2!
-func (k *Kademlia) DoIterativeFindNode(id ID) ([]Contact, error) {
-	
-	return nil, &CommandFailed{"Not implemented"}
+func (k *Kademlia) DoIterativeFindNode(id ID) ([]string, error) {
+	cs, err := k.DoFindNode(&k.SelfContact, id)
+	if err == nil{
+		var cs_a []*Contact
+		for _, c := range cs {
+			cs_a = append(cs_a, &c)
+		}
+		sl := new(ShortList)
+		sl.initializeShortList(cs_a, id)
+		
+		chnn := make(chan FindNodeResult)
+		var count int
+		nocloser := false
+		for !sl.checkActive() && !nocloser {
+			f3 := sl.getAlphaNotContacted()
+			for _, c := range f3 {
+				go FindNodeRoutine(*c, id, chnn)
+			}
+			
+			count = 0
+			nocloser = true
+			for {
+				select {
+					case fnr := <- chnn:
+					     if fnr.Err != nil {
+					     	sl.removeInactive(&Contact{fnr.MsgID, nil, 0})
+					     } else {
+					     	for ct := range fnr.Nodes {
+						     	if sl.updateActiveContact(&ct) {
+						     		nocloser = false
+						     	}        
+					     	}
+						    sl.setActive(&Contact{fnr.MsgID, nil, 0})
+					     }
+					     count++
+				    default:
+				         if count == 3 {
+				         	break
+				         }
+				}
+			}
+		}
+		
+		//can't find closer node?
+		//return a string slice that contains the ID of the k closest nodes
+	} else {
+		return nil, &CommandFailed{"Timeout"} 
+	}
 }
 func (k *Kademlia) DoIterativeStore(key ID, value []byte) ([]Contact, error) {
 	return nil, &CommandFailed{"Not implemented"}
 }
-func (k *Kademlia) DoIterativeFindValue(key ID) (value []byte, err error) {
-	return nil, &CommandFailed{"Not implemented"}
+
+func (k *Kademlia) FindValueRoutine(ct Contact, key ID, chnn chan FindValueResult) {
+	v, c, err := k.DoFindValue(&ct, key)	
+	chnn <- FindValueResult{ct.NodeID, v, c, err}
+}
+
+func (k *Kademlia) DoIterativeFindValue(key ID) (id ID, value []byte, err error) {
+	vs, cs, err := k.DoFindValue(&k.SelfContact, key)	//find value at local
+	if err == nil {		
+		if vs != nil {
+			return vs, nil                              //the value is found at local
+		} else {
+			var cs_a []*Contact
+			for _, c := range cs {
+				cs_a = append(cs_a, &c)
+			}
+			sl := new(ShortList)
+			sl.initializeShortList(cs_a, key)           //initialize shortlist
+			
+			chnn := make(chan FindValueResult)
+			var count int
+			nocloser := false
+			for !sl.checkActive() && !nocloser {
+				f3 := sl.getAlphaNotContacted()
+				for _, c := range f3 {
+					go k.FindValueRoutine(c, key, chnn)  //find value at the first alpha nodes
+				}
+				
+				count = 0
+				nocloser = true
+				for {
+					select {
+						case fvr := <- chnn:
+						     if fvr.Err != nil {
+						    	sl.removeInactive(&Contact{fvr.MsgID, nil, 0})
+						     } else if fvr.Value != nil {
+						     	//store at the closest node that doesn't contain the value
+						     	return fvr.Value, nil
+						     } else {
+						     	for ct := range fvr.Nodes {
+						     		if sl.updateActiveContact(&ct) {     //what about the active nodes?
+						     			nocloser = false    				     	
+						     		} 
+						     	}
+						     	sl.setActive(&Contact{fvr.MsgID, nil, 0})   
+						     }
+						     count++
+						     
+					    default:                                       
+					         if count == 3 {
+					         	break
+					         }
+					}
+				}
+			}
+			
+			// can't find closer node, and then?
+			// can't find the value, return the id of the closest node and a key not found message 
+		}
+	} else {
+		return k.SelfContact.NodeID, nil, &CommandFailed{"Timeout"}
+	}	
 }
 
 // For project 3!
