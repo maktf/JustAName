@@ -113,3 +113,16 @@ func (shortList *ShortList) getClosestNodes()[]string{
 	return shortList.closestNode
 }
 
+func (shortList *ShortList) getAllNotContacted() []*Contact{
+	res := make([]*Contact)
+	for id, contact := range shortList.list{
+		_, ok_remove := shortList.removed[id]
+		_, ok_calling := shortList.calling[id]
+		_, ok_active := shortList.active[id]
+		if(ok_active == false && ok_calling == false && ok_remove == false){
+			res = append(res, contact)
+		}
+	}
+	return res
+}
+
