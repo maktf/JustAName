@@ -13,11 +13,11 @@ type ShortList struct{
 func (shortList *ShortList) initializeShortList(localContacts []*Contact, target ID){
 	shortList.shortestDistance = -1
 	shortList.calling = make(map[string]bool)
-	shortlist.active = make(map[string]bool)
+	shortList.active = make(map[string]bool)
 	shortList.list = make(map[string]*Contact)
 	shortList.target = target
 	shortList.removed = make(map[string]bool)
-	closestNode = make([]string)
+	shortList.closestNode = make([]string,0)
 	for _, contact := range localContacts{
 		shortList.list[contact.NodeID.AsString()] = contact
 		dis := distance(contact.NodeID, target)
@@ -35,12 +35,12 @@ func (shortList *ShortList) updateActiveContact(newContact *Contact) bool{
 	if _,ok := shortList.list[id]; ok == false{
 		shortList.list[id] = newContact
 		if dis>shortList.shortestDistance{
-			closestNode = make([]string)
-			closestNode = append(closestNode,id)
+			shortList.closestNode = make([]string,0)
+			shortList.closestNode = append(shortList.closestNode,id)
 			shortList.shortestDistance = dis
 			return true
 		}else if dis == shortList.shortestDistance{
-			closestNode = append(closestNode, id)
+			shortList.closestNode = append(shortList.closestNode, id)
 			return true
 		}
 	}
@@ -74,7 +74,7 @@ func (shortList *ShortList) checkActive() bool{
 
 //return alpha contacts which has not been contacted, maybe fewer than alpha
 func (shortList *ShortList) getAlphaNotContacted() []*Contact{
-	res := make([]*Contact)
+	res := make([]*Contact,0)
 	i := 0
 	for j:= 0; i<alpha && j<len(shortList.closestNode);j++{
 		if _,ok := shortList.calling[shortList.closestNode[j]]; ok == false{
@@ -102,7 +102,7 @@ func (shortList *ShortList) getAlphaNotContacted() []*Contact{
 }
 
 func (shortList *ShortList) getActiveNodes() []string{
-	res := make([]string)
+	res := make([]string,0)
 	for id := range shortList.active{
 		res = append(res, id)
 	}
@@ -114,7 +114,7 @@ func (shortList *ShortList) getClosestNodes()[]string{
 }
 
 func (shortList *ShortList) getAllNotContacted() []*Contact{
-	res := make([]*Contact)
+	res := make([]*Contact,0)
 	for id, contact := range shortList.list{
 		_, ok_remove := shortList.removed[id]
 		_, ok_calling := shortList.calling[id]
