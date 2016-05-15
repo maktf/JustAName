@@ -341,7 +341,7 @@ func executeLine(k *libkademlia.Kademlia, line string) (response string) {
 		} else {
 			var rep string
 			for _, c := range contacts {
-				rep += c + "\n"
+				rep += (*c).NodeID.AsString() + "\n"
 			}
 			response = fmt.Sprintf("OK: Got %d contacts:\n%s", len(contacts), rep)
 		}
