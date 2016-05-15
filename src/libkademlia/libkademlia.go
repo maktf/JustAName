@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/rpc"
 	"strconv"
+	"time"
 )
 
 const (
@@ -180,16 +181,11 @@ func (k *Kademlia) DoFindNode(contact *Contact, searchKey ID) ([]Contact, error)
 			"Unable to find node " + fmt.Sprintf("%s:%v", contact.Host.String(), contact.Port)}
 	} else {
 		k.KB.CommandChannel <- &KBucketRequest{"main", UPDATE, nil, contact, nil}
-		//for i:=0;i<len(findNodeResult.Nodes);i++{
-		//	fmt.Println(findNodeResult.Nodes[i].NodeID.AsString(),findNodeResult.Nodes[i].Host, findNodeResult.Nodes[i].Port)
-		//}
-		//fmt.Println("====================",len(findNodeResult.Nodes))
 		return findNodeResult.Nodes, nil
 	}	
 }
 
-func (k *Kademlia) DoFindValue(contact *Contact,
-	searchKey ID) (value []byte, contacts []Contact, err error) {
+func (k *Kademlia) DoFindValue(contact *Contact,searchKey ID) (value []byte, contacts []Contact, err error) {
 	// TODO: Implement
 	//fmt.Println(host.String()+":"+strconv.Itoa(int(port)))
 
@@ -225,8 +221,53 @@ func (k *Kademlia) LocalFindValue(searchKey ID) ([]byte, error) {
 }
 
 // For project 2!
+
+func (k *Kademlia) searchRoutine(contact *Contact, searchId ID, signalChannel chan bool){
+	res, err := k.DoFindNode(contact, searchId)
+	if err != nil{
+		signalChannel <- err
+		return
+	}
+}
+
 func (k *Kademlia) DoIterativeFindNode(id ID) ([]Contact, error) {
-	
+	/*res, err := k.DoFindNode(&k.SelfContact, id)
+	if err!= nil{
+		return nil, &CommandFailed{"Unable to Find the first alpha nodes locally"}
+	}
+	first := make([]*Contact)
+	for i:= 0 ;i<alpha && i<len(res);i++{
+		first = append(first,&res[i])
+	}
+	shortlist := new(ShortList)
+	shortlist.initializeShortList(first, id)
+	channelpool = make(map[chan []*Contact]*Contact)
+	var temp_channel chan []*Contact
+	for shortlist.checkActive() != true{
+		cand := shortlist.getAlphaNotContacted()
+		if len(cand) == 0{
+			break
+		}
+		for _,contact := range cand{
+			temp_channel = make(chan []*Contact, 1)
+			channelpool[temp_channel] = contact
+			go k.searchRoutine(contact, id, temp_channel)
+		}
+		time.Sleep(300)
+		newChannelPool = make([]chan []*Contact)
+		for channel, sender := range channelpool{
+			select{
+			case update <- channel:
+				shortlist.setActive(sender)
+				for _, newcontact := range update{
+					shortlist.updateActiveContact(newcontact)
+				}
+				delete(channelpool, channel)
+			default:
+				
+			}
+		}
+	}*/
 	return nil, &CommandFailed{"Not implemented"}
 }
 func (k *Kademlia) DoIterativeStore(key ID, value []byte) ([]Contact, error) {

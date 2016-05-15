@@ -16,7 +16,7 @@ func (shortList *ShortList) initializeShortList(localContacts []*Contact, target
 	shortlist.active = make(map[string]bool)
 	shortList.list = make(map[string]*Contact)
 	shortList.target = target
-	shortList.removed = make(make[string]bool)
+	shortList.removed = make(map[string]bool)
 	closestNode = make([]string)
 	for _, contact := range localContacts{
 		shortList.list[contact.NodeID.AsString()] = contact
@@ -92,15 +92,24 @@ func (shortList *ShortList) getAlphaNotContacted() []*Contact{
 				res = append(res, contact)
 			}
 			i++
-			if(i>=alpha)
+			if i>=alpha{
 				break
+			}
 		}
 	}
 	return res
 
 }
 
-func (shortList *ShortList) getClosestNodes()[]*Contact{
-	return shortList.closestNode;
+func (shortList *ShortList) getActiveNodes() []string{
+	res := make([]string)
+	for id := range shortList.active{
+		res = append(res, id)
+	}
+	return res
+}
+
+func (shortList *ShortList) getClosestNodes()[]string{
+	return shortList.closestNode
 }
 
