@@ -260,7 +260,7 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
 			count = 0
 			nocloser = true
 			fmt.Println("---------------------------")
-			for count < len(f3) {
+			for !sl.checkActive() && count < len(f3) {
 				select {
 					case fnr := <- chnn:
 					     if fnr.Err != nil {
@@ -361,7 +361,7 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 				
 				count = 0
 				nocloser = true
-				for count < len(f3) {
+				for !sl.checkActive() && count < len(f3) {
 					select {
 						case fvr := <- chnn:
 						     if fvr.Err != nil {
@@ -400,13 +400,22 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 				for !sl.checkActive() && count < len(cs_a) {
 					select {
 						case fvr := <- chnn:
-						     if fvr.Err == nil {
+						     if fvr.Err != nil {
+						     	sl.removeInactive(&Contact{fvr.MsgID, nil, 0})
+						     } else if fvr.Value != nil {
+						     	acs := sl.getActiveNodes()
+						     	for _, ac := range acs {
+						     		go k.StoreValueRoutine(*ac, key, fvr.Value)
+						     	}
+						     	return fvr.MsgID.AsString(), fvr.Value, nil
+						     } else {
 						     	for i := 0; i < len(fvr.Nodes); i++ {
 						     		sl.updateActiveContact(&fvr.Nodes[i])        
 					     	    }
 						     	sl.setActive(&Contact{fvr.MsgID, nil, 0})
 					         }
 					         count++
+					         
 				        default:
 					}
 				}
