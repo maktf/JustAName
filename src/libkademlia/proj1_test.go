@@ -205,7 +205,7 @@ func TestFindValue(t *testing.T) {
 	}
 
 	// TODO: Check that the correct contacts were stored
-	for i:=0;i<len(contacts);i++{
+	for i:=0;i<len(contacts);i++ {
 		_, err = instance1.DoPing(contacts[i].Host,contacts[i].Port)
 		if err != nil{
 			t.Error("Wrong contacts were stored")
@@ -213,4 +213,92 @@ func TestFindValue(t *testing.T) {
 	}
 	//       (and no other contacts)
 	return
+}
+
+func TestDoIterativeFindNode (t *testing.T) {
+	number := 4
+	instances := make([]*Kademlia, number)
+	for i := 0; i < number; i++ {
+		address := "localhost:" + strconv.Itoa(8100 + i)
+		instances[i] = NewKademlia(address)
+	}
+	for i := 1; i < number; i++ {
+		host := instances[i - 1].SelfContact.Host
+		port := instances[i - 1].SelfContact.Port
+		_, err := instances[i].DoPing(host, port)
+		if err != nil {
+			t.Error("DoPing", err)
+		}
+	}
+	for i := 0; i < number; i++ {
+		for j := 0; j < number; j++ {
+			contacts, err := instances[i].DoIterativeFindNode(instances[j].NodeID)
+			if err != nil {
+				t.Error("DoIterativeFindNode", err)
+			} else {
+				var maxDistance int
+				maxDistance = -1
+				var minDistance int
+				minDistance = 1<<32 - 1
+				for k := 0; k < len(contacts); k++ {
+					currentDistance := distance(instances[i].SelfContact.NodeID, contacts[k].NodeID)
+					if currentDistance > maxDistance {
+						maxDistance = currentDistance
+					}
+					returnedContacts, err := instances[i].DoFindNode(contacts[k], instances[i].SelfContact.NodeID)
+					if err != nil {
+						t.Error("DoFindNode", err)
+					}
+					for l := 0; l < len(returnedContacts); l++ {
+						currentDistance = distance(instances[i].SelfContact.NodeID, returnedContacts[l].NodeID)
+						if currentDistance < minDistance {
+							minDistance = currentDistance
+						}
+					}
+				}
+				if minDistance >= maxDistance && len(contacts) != k {
+					t.Error("DoIterativeFindNode Result")
+				}
+			}
+		}
+	}
+}
+
+func TestDoIterativeStore (t *testing.T) {
+	number := 4
+	instances := make([]*Kademlia, number)
+	for i := 0; i < number; i++ {
+		address := "localhost:" + strconv.Itoa(8100 + i)
+		instances[i] = NewKademlia(address)
+	}
+	for i := 1; i < number; i++ {
+		host := instances[i - 1].SelfContact.Host
+		port := instances[i - 1].SelfContact.Port
+		_, err := instances[i].DoPing(host, port)
+		if err != nil {
+			t.Error("DoPing", err)
+		}
+	}
+	// for i := 0; i < number; i++ {
+	// 	for j := 0; j < number; j++ {
+
+	// 	}
+	// }
+}
+
+func TestDoIterativeFindValue (t *testing.T) {
+	number := 4
+	instances := make([]*Kademlia, number)
+	for i := 0; i < number; i++ {
+		address := "localhost:" + strconv.Itoa(8100 + i)
+		instances[i] = NewKademlia(address)
+	}
+	for i := 1; i < number; i++ {
+		host := instances[i - 1].SelfContact.Host
+		port := instances[i - 1].SelfContact.Port
+		_, err := instances[i].DoPing(host, port)
+		if err != nil {
+			t.Error("DoPing", err)
+		}
+	}	
 }
