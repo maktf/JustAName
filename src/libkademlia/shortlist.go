@@ -1,5 +1,9 @@
 package libkademlia
 
+import(
+	"fmt"
+)
+
 type ShortList struct{
 	active map[string]bool
 	list map[string]*Contact
@@ -34,6 +38,7 @@ func (shortList *ShortList) updateActiveContact(newContact *Contact) bool{
 	id := newContact.NodeID.AsString()
 	if _,ok := shortList.list[id]; ok == false{
 		shortList.list[id] = newContact
+		fmt.Println("Insert: ", id, " ", newContact.NodeID.AsString())
 		if dis>shortList.shortestDistance{
 			shortList.closestNode = make([]string,0)
 			shortList.closestNode = append(shortList.closestNode,id)
@@ -79,24 +84,32 @@ func (shortList *ShortList) getAlphaNotContacted() []*Contact{
 	for j:= 0; i<alpha && j<len(shortList.closestNode);j++{
 		if _,ok := shortList.calling[shortList.closestNode[j]]; ok == false{
 			res = append(res, shortList.list[shortList.closestNode[j]])
+			fmt.Println("getAlpha: ", shortList.closestNode[j], " ", shortList.list[shortList.closestNode[j]].NodeID.AsString())
 			shortList.calling[shortList.closestNode[j]] = true
 			i++
 		}
 	} 
-	if(i<alpha){
-		for id, contact := range shortList.list{
+	if i<alpha {
+		for id, contact := range shortList.list {
 			_, ok_remove := shortList.removed[id]
 			_, ok_calling := shortList.calling[id]
 			_, ok_active := shortList.active[id]
-			if(ok_active == false && ok_calling == false && ok_remove == false){
+			if ok_active == false && ok_calling == false && ok_remove == false {
 				res = append(res, contact)
+				fmt.Println("<alpha: ", contact.NodeID.AsString())
+				i++
 			}
-			i++
-			if i>=alpha{
+			
+			if i>=alpha {
 				break
 			}
 		}
 	}
+	
+	for _, r := range res {
+	     fmt.Println("result: ", (*r).NodeID.AsString())
+	}
+	 
 	return res
 
 }
@@ -126,3 +139,20 @@ func (shortList *ShortList) getAllNotContacted() []*Contact{
 	return res
 }
 
+func (shortList *ShortList) printStatus() {
+	for str := range shortList.active {
+		fmt.Println("Print Active: ", str)
+	}
+	for str := range shortList.removed {
+		fmt.Println("Print Removed: ", str)
+	}
+	for str := range shortList.calling {
+		fmt.Println("Print Calling: ", str)
+	}
+	for _, str := range shortList.closestNode {
+		fmt.Println("Print Closest: ", str)
+	}
+	for str, v := range shortList.list {
+		fmt.Println("Print List: ", str, v.NodeID.AsString())
+	}
+}
