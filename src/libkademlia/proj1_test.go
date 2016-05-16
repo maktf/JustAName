@@ -268,7 +268,7 @@ func TestDoIterativeStore (t *testing.T) {
 	number := 4
 	instances := make([]*Kademlia, number)
 	for i := 0; i < number; i++ {
-		address := "localhost:" + strconv.Itoa(8100 + i)
+		address := "localhost:" + strconv.Itoa(8200 + i)
 		instances[i] = NewKademlia(address)
 	}
 	for i := 1; i < number; i++ {
@@ -279,18 +279,18 @@ func TestDoIterativeStore (t *testing.T) {
 			t.Error("DoPing", err)
 		}
 	}
-	// for i := 0; i < number; i++ {
-	// 	for j := 0; j < number; j++ {
+	for i := 0; i < number; i++ {
+		for j := 0; j < number; j++ {
 
-	// 	}
-	// }
+		}
+	}
 }
 
 func TestDoIterativeFindValue (t *testing.T) {
 	number := 4
 	instances := make([]*Kademlia, number)
 	for i := 0; i < number; i++ {
-		address := "localhost:" + strconv.Itoa(8100 + i)
+		address := "localhost:" + strconv.Itoa(8300 + i)
 		instances[i] = NewKademlia(address)
 	}
 	for i := 1; i < number; i++ {
