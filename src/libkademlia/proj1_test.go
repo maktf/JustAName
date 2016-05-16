@@ -257,7 +257,7 @@ func TestDoIterativeFindNode (t *testing.T) {
 					}
 				}
 				if minDistance >= maxDistance && len(contacts) != k {
-					t.Error("DoIterativeFindNode Result")
+					t.Error("DoIterativeFindNode Termination Wrong")
 				}
 			}
 		}
