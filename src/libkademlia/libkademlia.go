@@ -240,6 +240,7 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
 		var cs_a []*Contact
 		for _, c := range cs {
 			cs_a = append(cs_a, &c)
+			fmt.Println("initial ",c.NodeID.AsString())
 		}
 		sl := new(ShortList)
 		sl.initializeShortList(cs_a, id)
@@ -248,24 +249,30 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
 		var count int
 		nocloser := false
 		for !sl.checkActive() && !nocloser {
+			fmt.Println("\n\n")
+		    sl.printStatus()
+		    fmt.Println("\n\n")
 			f3 := sl.getAlphaNotContacted()
 			for _, c := range f3 {
 				go k.FindNodeRoutine(*c, id, chnn)
+				fmt.Println("alpha ",(*c).NodeID.AsString())
 			}
 			count = 0
 			nocloser = true
+			fmt.Println("---------------------------")
 			for count < len(f3) {
 				select {
 					case fnr := <- chnn:
 					     if fnr.Err != nil {
 					     	sl.removeInactive(&Contact{fnr.MsgID, nil, 0})
 					     } else {
-					     	for _, ct := range fnr.Nodes {
-						     	if sl.updateActiveContact(&ct) {
+					     	for i := 0; i < len(fnr.Nodes); i++ {
+					     		fmt.Println(fnr.Nodes[i].NodeID.AsString())
+						     	if sl.updateActiveContact(&fnr.Nodes[i]) {
 						     		nocloser = false
 						     	}        
 					     	}
-						sl.setActive(&Contact{fnr.MsgID, nil, 0})
+						    sl.setActive(&Contact{fnr.MsgID, nil, 0})
 					     }
 					     count++
 				    default:
@@ -273,19 +280,29 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
 			}
 		}
 		
+		fmt.Println("\n\n")
+		sl.printStatus()
 		
-		if !sl.checkActive() {
+		for !sl.checkActive() {
 			cs_a = sl.getAllNotContacted()
+			if len(cs_a) == 0 {
+				break
+			}
 			count = 0
 			for _, c := range cs_a {
 				go k.FindNodeRoutine(*c, id, chnn)
+				fmt.Println("NotContacted ",(*c).NodeID.AsString())
 			}
 			
 			for !sl.checkActive() && count < len(cs_a) {
 				select {
 					case fnr := <- chnn:
 					     if fnr.Err == nil {
+					     	for i := 0; i < len(fnr.Nodes); i++ {
+						     	sl.updateActiveContact(&fnr.Nodes[i])        
+					     	}
 					     	sl.setActive(&Contact{fnr.MsgID, nil, 0})
+					     	fmt.Println(fnr.MsgID.AsString())
 					     }
 					     count++
 				    default:
@@ -356,8 +373,8 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 						     	}
 						     	return fvr.MsgID.AsString(), fvr.Value, nil
 						     } else {
-						     	for _, ct := range fvr.Nodes {
-						     		if sl.updateActiveContact(&ct) {     //what about the active nodes?
+						     	for i := 0; i < len(fvr.Nodes); i++ {
+						     		if sl.updateActiveContact(&fvr.Nodes[i]) {     //what about the active nodes?
 						     			nocloser = false    				     	
 						     		} 
 						     	}
@@ -370,8 +387,11 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 				}
 			}
 			
-			if !sl.checkActive() {
+			for !sl.checkActive() {
 				cs_a = sl.getAllNotContacted()
+				if len(cs_a) == 0 {
+					break
+				}
 				count = 0
 				for _, c := range cs_a {
 					go k.FindValueRoutine(*c, key, chnn)
@@ -381,6 +401,9 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 					select {
 						case fvr := <- chnn:
 						     if fvr.Err == nil {
+						     	for i := 0; i < len(fvr.Nodes); i++ {
+						     		sl.updateActiveContact(&fvr.Nodes[i])        
+					     	    }
 						     	sl.setActive(&Contact{fvr.MsgID, nil, 0})
 					         }
 					         count++
