@@ -27,6 +27,9 @@ func (shortList *ShortList) initializeShortList(localContacts []*Contact, target
 		dis := distance(contact.NodeID, target)
 		if shortList.shortestDistance < dis{
 			shortList.shortestDistance = dis
+			shortList.closestNode = append(shortList.closestNode,contact.NodeID.AsString())
+		}else if shortList.shortestDistance == dis{
+			shortList.closestNode = append(shortList.closestNode,contact.NodeID.AsString())
 		}
 	}
 }
