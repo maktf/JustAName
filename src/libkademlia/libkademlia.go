@@ -325,15 +325,15 @@ func (k *Kademlia) StoreValueRoutine(ct Contact, key ID, value []byte){
 	k.DoStore(&ct, key, value)
 }
 
-func (k *Kademlia) DoIterativeStore(key ID, value []byte) (string, error) {
+func (k *Kademlia) DoIterativeStore(key ID, value []byte) ([]*Contact, error) {
 	cs, err := k.DoIterativeFindNode(key)
 	if err != nil {
-		return "", &CommandFailed{"Unable to store key-value pairs iteratively"}
+		return nil, &CommandFailed{"Unable to store key-value pairs iteratively"}
 	} else {
 		for _, c := range cs {
 			go k.StoreValueRoutine(*c, key, value)
 		}
-		return (*cs[len(cs)-1]).NodeID.AsString(), nil
+		return cs, nil
 	}
 }
 
