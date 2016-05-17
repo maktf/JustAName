@@ -69,6 +69,7 @@ func (kb *KBuckets) Run(k *Kademlia, man *RequestManager) bool{
 			comType := command.Command
 			contact := command.Contact
 			sender := command.Sender
+			//fmt.Println("Command Type: %s",comType)
 			switch comType{
 			case UPDATE:
 				res := new(KResult)

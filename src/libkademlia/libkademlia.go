@@ -184,12 +184,14 @@ func (k *Kademlia) DoFindNode(contact *Contact, searchKey ID) ([]Contact, error)
 			"Unable to find node " + fmt.Sprintf("%s:%v", contact.Host.String(), contact.Port)}
 	} else {
 		k.KB.CommandChannel <- &KBucketRequest{"main", UPDATE, nil, contact, nil}
+		for i:=0;i<len(findNodeResult.Nodes);i++{
+			k.KB.CommandChannel <- &KBucketRequest{"main", UPDATE, nil, &findNodeResult.Nodes[i],nil}
+		}
 		return findNodeResult.Nodes, nil
 	}	
 }
 
-func (k *Kademlia) DoFindValue(contact *Contact,
-	searchKey ID) (value []byte, contacts []Contact, err error) {
+func (k *Kademlia) DoFindValue(contact *Contact,searchKey ID) (value []byte, contacts []Contact, err error) {
 	// TODO: Implement
 	//fmt.Println(host.String()+":"+strconv.Itoa(int(port)))
 
@@ -209,6 +211,9 @@ func (k *Kademlia) DoFindValue(contact *Contact,
 	//fmt.Println(res.MsgID)
 	if err == nil {
 		k.KB.CommandChannel <- &KBucketRequest{"main", UPDATE, nil, contact, nil}
+		for i:=0;i<len(res.Nodes);i++{
+			k.KB.CommandChannel <- &KBucketRequest{"main", UPDATE, nil, &res.Nodes[i],nil}
+		}
 		return res.Value, res.Nodes, nil
 	} else {
 		return nil, nil, &CommandFailed{
