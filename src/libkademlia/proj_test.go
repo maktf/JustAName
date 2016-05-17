@@ -302,18 +302,17 @@ func TestDoIterativeStore (t *testing.T) {
 			break
 		}
 	}
+	keys := make([]ID, number)
+	values := make([]Value, number)
 	for i := 0; i < number; i++ {
-		for j := 0; j < number; j++ {
-			value := []byte("TestDoIterativeStore - " + instances[i].NodeID.AsString() + " - to store - key = " + instances[j].NodeID.AsString())
-			instances[i].DoIterativeStore(instances[j].NodeID, value)
-			storedValue, err := instances[j].LocalFindValue(instances[j].NodeID)
-			if err != nil {
-				t.Error("TestDoIterativeStore - LocalFindValue - ", err)
-			}
-			if !bytes.Equal(storedValue, value) {
-				t.Error("TestDoIterativeStore - LocalFindValue - bytes - Equal - storedValue - value", err)
-			}
-		}
+		key := NewRandomID()
+		value := Value("TestDoIterativeStore - " + instances[i].NodeID.AsString() + " - to store - key = " + key.AsString())
+		keys[i] = key
+		values[i] = value
+		instances[i].DoIterativeStore(key, value)
+	}
+	for i := 0; i < number; i++ {
+
 	}
 }
 
