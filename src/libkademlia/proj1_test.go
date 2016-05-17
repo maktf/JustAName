@@ -218,7 +218,7 @@ func TestFindValue(t *testing.T) {
 }
 
 func TestDoIterativeFindNode (t *testing.T) {
-	number := 5
+	number := 20
 	instances := make([]*Kademlia, number)
 	for i := 0; i < number; i++ {
 		address := "localhost:" + strconv.Itoa(8100 + i)
