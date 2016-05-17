@@ -361,8 +361,8 @@ func executeLine(k *libkademlia.Kademlia, line string) (response string) {
 		if err != nil {
 			response = fmt.Sprintf("ERR: %s", err)
 		} else {
-			var string ids
-			for _, c := contacts {
+			var ids string
+			for _, c := range contacts {
 				ids += (*c).NodeID.AsString() + "\n"
 			}
 			response = fmt.Sprintf("OK: Stored value on %d contacts:\n%s", len(contacts), ids)
