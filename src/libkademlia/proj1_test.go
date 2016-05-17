@@ -229,7 +229,7 @@ func TestDoIterativeFindNode (t *testing.T) {
 		port := instances[i - 1].SelfContact.Port
 		_, err := instances[i].DoPing(host, port)
 		if err != nil {
-			t.Error("DoPing", err)
+			t.Error("TestDoIterativeFindNode - DoPing - ", err)
 		}
 	}
 	for i := 0; i < number; i++ {
@@ -258,7 +258,28 @@ func TestDoIterativeFindNode (t *testing.T) {
 						}
 					}
 				} else {
-
+					var minDistance int
+					minDistance = 1<<32 - 1
+					for y := 0; y < len(contacts); y++ {
+						currentDistance := distance(instances[i].SelfContact.NodeID, contacts[y].NodeID)
+						if currentDistance < minDistance {
+							minDistance = currentDistance
+						}
+					}					
+					for y := 0; y < len(contacts); y++ {
+						returnedContacts, err := instances[i].DoFindNode(contacts[y], instances[j].NodeID)
+						if err != nil {
+							t.Error("TestDoIterativeFindNode - returnedContacts - DoFindNode - ", err)
+						} else {
+							for z := 0; z < len(returnedContacts); z++ {
+								currentDistance := distance(instances[i].SelfContact.NodeID, returnedContacts[z].NodeID)
+								if currentDistance < minDistance {
+									t.Error("TestDoIterativeFindNode - Wrong Results")
+									break
+								}
+							}
+						}
+					}
 				}
 			}
 		}
