@@ -305,8 +305,8 @@ func TestDoIterativeStore (t *testing.T) {
 	for i := 0; i < number; i++ {
 		for j := 0; j < number; j++ {
 			value := []byte("TestDoIterativeStore - " + instances[i].NodeID.AsString() + " - to store - key = " + instances[j].NodeID.AsString())
-			instances[i].DoIterativeStore(instances[i].NodeID, value)
-			storedValue, err := instances[i].LocalFindValue(instances[i].NodeID)
+			instances[i].DoIterativeStore(instances[j].NodeID, value)
+			storedValue, err := instances[j].LocalFindValue(instances[j].NodeID)
 			if err != nil {
 				t.Error("TestDoIterativeStore - LocalFindValue - ", err)
 			}
