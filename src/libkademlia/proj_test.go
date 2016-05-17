@@ -299,11 +299,20 @@ func TestDoIterativeStore (t *testing.T) {
 		_, err := instances[i].DoPing(host, port)
 		if err != nil {
 			t.Error("TestDoIterativeStore - DoPing - ", err)
+			break
 		}
 	}
 	for i := 0; i < number; i++ {
-		for j := 0; j < number; j++ {
-
+		for j := 9; j < number; j++ {
+			value := []byte("TestDoIterativeStore - " + instances[i].NodeID.AsString() + " - to store - key = " + instances[j].NodeID.AsString())
+			instances[i].DoIterativeStore(instances[i].NodeID, value)
+			storedValue, err := instances[i].LocalFindValue(instances[i].NodeID)
+			if err != nil {
+				t.Error("TestDoIterativeStore - LocalFindValue - ", err)
+			}
+			if !bytes.Equal(storedValue, value) {
+				t.Error("TestDoIterativeStore - LocalFindValue - ", err)
+			}
 		}
 	}
 }
@@ -322,5 +331,5 @@ func TestDoIterativeFindValue (t *testing.T) {
 		if err != nil {
 			t.Error("DoPing", err)
 		}
-	}	
+	}
 }
