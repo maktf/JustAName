@@ -311,7 +311,7 @@ func TestDoIterativeStore (t *testing.T) {
 				t.Error("TestDoIterativeStore - LocalFindValue - ", err)
 			}
 			if !bytes.Equal(storedValue, value) {
-				t.Error("TestDoIterativeStore - LocalFindValue - ", err)
+				t.Error("TestDoIterativeStore - LocalFindValue - bytes - Equal - storedValue - value", err)
 			}
 		}
 	}
