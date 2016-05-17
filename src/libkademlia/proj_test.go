@@ -312,15 +312,23 @@ func TestDoIterativeStore (t *testing.T) {
 		instances[i].DoStore(&instances[i].SelfContact, key, value)
 		instances[i].DoStore(&instances[number - 1 - i].SelfContact, key, value)
 	}
-	for i := 0; i < number; i++ {
-		key := keys[i]
-		value := values[i]
-		value = Value("Update - " + string(value))
-		_, err := instances[i].DoIterativeStore(key, value)
-		if err != nil {
-			t.Error("TestDoIterativeStore - DoIterativeStore - ", err)
-		} 
-	}
+	// NodeIDs := make([]ID, 0)
+	// for i := 0; i < number; i++ {
+	// 	key := keys[i]
+	// 	value := values[i]
+	// 	value = Value("Update - " + string(value))
+	// 	NodeIDAsString, err := instances[i].DoIterativeStore(key, value)
+	// 	if err != nil {
+	// 		t.Error("TestDoIterativeStore - DoIterativeStore - ", err)
+	// 	} else {
+	// 		NodeIDAsBytes, err := IDFromString(NodeIDAsString)
+	// 		if err != nil {
+	// 			t.Error("TestDoIterativeStore - DoIterativeStore - IDFromString - ", err)
+	// 		} else {
+	// 			NodeIDs = append(NodeIDs, NodeIDAsBytes
+	// 		}
+	// 	}
+	// }
 }
 
 func TestDoIterativeFindValue (t *testing.T) {
