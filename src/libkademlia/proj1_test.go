@@ -5,8 +5,10 @@ import (
 	"net"
 	"strconv"
 	"testing"
-	//"fmt"
-	//"time"
+	// "fmt"
+	"time"
+	// "net/http"
+	"net/rpc"
 )
 
 func StringToIpPort(laddr string) (ip net.IP, port uint16, err error) {
@@ -216,7 +218,7 @@ func TestFindValue(t *testing.T) {
 }
 
 func TestDoIterativeFindNode (t *testing.T) {
-	number := 4
+	number := 5
 	instances := make([]*Kademlia, number)
 	for i := 0; i < number; i++ {
 		address := "localhost:" + strconv.Itoa(8100 + i)
@@ -234,30 +236,29 @@ func TestDoIterativeFindNode (t *testing.T) {
 		for j := 0; j < number; j++ {
 			contacts, err := instances[i].DoIterativeFindNode(instances[j].NodeID)
 			if err != nil {
-				t.Error("DoIterativeFindNode", err)
+				t.Error("TestDoIterativeFindNode - DoIterativeFindNode - ", err)
 			} else {
-				var maxDistance int
-				maxDistance = -1
-				var minDistance int
-				minDistance = 1<<32 - 1
-				for k := 0; k < len(contacts); k++ {
-					currentDistance := distance(instances[i].SelfContact.NodeID, contacts[k].NodeID)
-					if currentDistance > maxDistance {
-						maxDistance = currentDistance
-					}
-					returnedContacts, err := instances[i].DoFindNode(contacts[k], instances[i].SelfContact.NodeID)
-					if err != nil {
-						t.Error("DoFindNode", err)
-					}
-					for l := 0; l < len(returnedContacts); l++ {
-						currentDistance = distance(instances[i].SelfContact.NodeID, returnedContacts[l].NodeID)
-						if currentDistance < minDistance {
-							minDistance = currentDistance
+				if len(contacts) == k {
+					for x := 0; x < len(contacts); x++ {
+						client, err := rpc.DialHTTPPath("tcp", contacts[x].Host.String() + ":" + strconv.Itoa(int(contacts[x].Port)), rpc.DefaultRPCPath + strconv.Itoa(int(contacts[x].Port)))
+						if err != nil {
+							t.Error("TestDoIterativeFindNode - rpc.DialHTTPPath - ", err)
+						} else {
+							go func() {
+								time.Sleep(time.Millisecond * 300)
+								client.Close()
+							} ()
+							findNodeRequest := FindNodeRequest{instances[i].SelfContact, NewRandomID(), instances[j].NodeID}
+							var findNodeResult FindNodeResult
+							err = client.Call("KademliaRPC.FindNode", findNodeRequest, &findNodeResult)
+							if err != nil {
+								t.Error("TestDoIterativeFindNode - DoIterativeFindNode - Exist InActive Node - ", err)
+								break
+							}
 						}
 					}
-				}
-				if minDistance >= maxDistance && len(contacts) != k {
-					t.Error("DoIterativeFindNode Termination Wrong")
+				} else {
+
 				}
 			}
 		}
