@@ -147,7 +147,7 @@ func TestFindNode(t *testing.T) {
 			_, err = instance1.DoPing(contacts[0].Host,contacts[0].Port)
 			if err != nil{
 				t.Error("Return Wrong Contact Value")
-			}else{
+			} else {
 				return 
 			}
 		}
@@ -204,6 +204,7 @@ func TestFindValue(t *testing.T) {
 	foundValue, contacts, err = instance1.DoFindValue(contact2, wrongKey)
 	if contacts == nil || len(contacts) < 10 {
 		t.Error("Searching for a wrong ID did not return contacts", len(contacts))
+		break
 	}
 
 	// TODO: Check that the correct contacts were stored
@@ -211,6 +212,7 @@ func TestFindValue(t *testing.T) {
 		_, err = instance1.DoPing(contacts[i].Host,contacts[i].Port)
 		if err != nil{
 			t.Error("Wrong contacts were stored")
+			break
 		}
 	}
 	//       (and no other contacts)
@@ -230,6 +232,7 @@ func TestDoIterativeFindNode (t *testing.T) {
 		_, err := instances[i].DoPing(host, port)
 		if err != nil {
 			t.Error("TestDoIterativeFindNode - DoPing - ", err)
+			break
 		}
 	}
 	for i := 0; i < number; i++ {
@@ -243,6 +246,7 @@ func TestDoIterativeFindNode (t *testing.T) {
 						client, err := rpc.DialHTTPPath("tcp", contacts[x].Host.String() + ":" + strconv.Itoa(int(contacts[x].Port)), rpc.DefaultRPCPath + strconv.Itoa(int(contacts[x].Port)))
 						if err != nil {
 							t.Error("TestDoIterativeFindNode - rpc.DialHTTPPath - ", err)
+							break
 						} else {
 							go func() {
 								time.Sleep(time.Millisecond * 300)
@@ -270,6 +274,7 @@ func TestDoIterativeFindNode (t *testing.T) {
 						returnedContacts, err := instances[i].DoFindNode(contacts[y], instances[j].NodeID)
 						if err != nil {
 							t.Error("TestDoIterativeFindNode - returnedContacts - DoFindNode - ", err)
+							break
 						} else {
 							for z := 0; z < len(returnedContacts); z++ {
 								currentDistance := distance(instances[i].SelfContact.NodeID, returnedContacts[z].NodeID)
@@ -287,7 +292,7 @@ func TestDoIterativeFindNode (t *testing.T) {
 }
 
 func TestDoIterativeStore (t *testing.T) {
-	number := 4
+	number := 5
 	instances := make([]*Kademlia, number)
 	for i := 0; i < number; i++ {
 		address := "localhost:" + strconv.Itoa(8200 + i)
@@ -305,14 +310,16 @@ func TestDoIterativeStore (t *testing.T) {
 	keys := make([]ID, number)
 	values := make([]Value, number)
 	for i := 0; i < number; i++ {
-		key := instances[i].NodeID
+		key := NewRandomID()
+		if i % 2 == 0 {
+			key = instances[i].NodeID
+		}
 		value := Value("TestDoIterativeStore - " + instances[i].NodeID.AsString() + " - to store - key = " + key.AsString())
 		keys[i] = key
 		values[i] = value
 		instances[i].DoStore(&instances[i].SelfContact, key, value)
 		instances[i].DoStore(&instances[number - 1 - i].SelfContact, key, value)
 	}
-// func (k *Kademlia) DoIterativeStore(key ID, value []byte) ([]*Contact, error) {
 	for i := 0; i < number; i++ {
 		key := keys[i]
 		value := values[i]
@@ -320,6 +327,7 @@ func TestDoIterativeStore (t *testing.T) {
 		storedContacts, err := instances[i].DoIterativeStore(key, value)
 		if err != nil {
 			t.Error("TestDoIterativeStore - DoIterativeStore - ", err)
+			break
 		} else {
 			for j := 0; j < len(storedContacts); j++ {
 				for k := 0; k < number; k++ {
@@ -331,7 +339,7 @@ func TestDoIterativeStore (t *testing.T) {
 						} else {
 							if !bytes.Equal(foundValue, value) {
 								t.Error("TestDoIterativeStore - LocalFindValue - Result")
-								break
+								break								
 							}
 						}
 					}
@@ -339,73 +347,6 @@ func TestDoIterativeStore (t *testing.T) {
 			}
 		}
 	}
-// func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
-	// for i := 0; i < number; i++ {
-	// 	for j := 0; j < number; j++ {
-	// 		contacts, err := instances[i].DoIterativeFindNode(instances[j].NodeID)
-	// 		if err != nil {
-	// 			t.Error("TestDoIterativeStore - DoIterativeFindNode - ", err)
-	// 		} else {
-
-	// 		}
-	// 	}
-	// }
-	// keys := make([]ID, number)
-	// values := make([]Value, number)
-	// for i := 0; i < number; i++ {
-	// 	key := NewRandomID()
-	// 	value := Value("TestDoIterativeStore - " + instances[i].NodeID.AsString() + " - to store - key = " + key.AsString())
-	// 	keys[i] = key
-	// 	values[i] = value
-	// 	instances[i].DoStore(&instances[i].SelfContact, key, value)
-	// 	instances[i].DoStore(&instances[number - 1 - i].SelfContact, key, value)
-	// }
-	// returnedValue, _ := instances[0].LocalFindValue(keys[0])
-	// if bytes.Equal(returnedValue, values[0]) {
-	// 	t.Error("Yuanhui Yang")
-	// }
-	// func (k *Kademlia) DoIterativeStore(key ID, value []byte) ([]*Contact, error)
-	// for i := 0; i < number; i++ {
-	// 	key := keys[i]
-	// 	value := values[i]
-	// 	value = Value("Update - "+ string(value))
-	// 	values[i] = value
-	// 	// values[number - 1 - i] = value
-	// 	_, err := instances[i].DoIterativeStore(key, value)
-	// 	if err != nil {
-	// 		t.Error("TestDoIterativeStore - DoIterativeStore - ", err)
-	// 	}
-	// }
-	// for i := 0; i < number; i++ {
-	// 	key := keys[i]
-	// 	value := values[i]
-	// 	returnedValue, err := instances[i].LocalFindValue(key)
-	// 	if err != nil {
-	// 		t.Error("TestDoIterativeStore - DoIterativeStore - LocalFindValue - ", err)
-	// 	} else {
-	// 		if bytes.Equal(returnedValue, value) {
-	// 			t.Error(string(returnedValue), string(value))
-	// 		}
-	// 	}
-	// }
-	// NodeIDAsString, err := instances[i].DoIterativeStore(key, value)
-	// NodeIDs := make([]ID, 0)
-	// for i := 0; i < number; i++ {
-	// 	key := keys[i]
-	// 	value := values[i]
-	// 	value = Value("Update - " + string(value))
-	// 	NodeIDAsString, err := instances[i].DoIterativeStore(key, value)
-	// 	if err != nil {
-	// 		t.Error("TestDoIterativeStore - DoIterativeStore - ", err)
-	// 	} else {
-	// 		NodeIDAsBytes, err := IDFromString(NodeIDAsString)
-	// 		if err != nil {
-	// 			t.Error("TestDoIterativeStore - DoIterativeStore - IDFromString - ", err)
-	// 		} else {
-	// 			NodeIDs = append(NodeIDs, NodeIDAsBytes
-	// 		}
-	// 	}
-	// }
 }
 
 func TestDoIterativeFindValue (t *testing.T) {
