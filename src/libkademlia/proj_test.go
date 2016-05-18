@@ -310,8 +310,37 @@ func TestDoIterativeStore (t *testing.T) {
 		keys[i] = key
 		values[i] = value
 		instances[i].DoStore(&instances[i].SelfContact, key, value)
-		instances[i].DoStore(&instances[number - 1 - i].SelfContact, key, value)
+		// instances[i].DoStore(&instances[number - 1 - i].SelfContact, key, value)
 	}
+	// returnedValue, _ := instances[0].LocalFindValue(keys[0])
+	// if bytes.Equal(returnedValue, values[0]) {
+	// 	t.Error("Yuanhui Yang")
+	// }
+	// func (k *Kademlia) DoIterativeStore(key ID, value []byte) ([]*Contact, error)
+	for i := 0; i < number; i++ {
+		key := keys[i]
+		value := values[i]
+		value = Value("Update - "+ string(value))
+		values[i] = value
+		// values[number - 1 - i] = value
+		_, err := instances[i].DoIterativeStore(key, value)
+		if err != nil {
+			t.Error("TestDoIterativeStore - DoIterativeStore - ", err)
+		}
+	}
+	for i := 0; i < number; i++ {
+		key := keys[i]
+		value := values[i]
+		returnedValue, err := instances[i].LocalFindValue(key)
+		if err != nil {
+			t.Error("TestDoIterativeStore - DoIterativeStore - LocalFindValue - ", err)
+		} else {
+			if !bytes.Equal(returnedValue, value) {
+				t.Error("TestDoIterativeStore - DoIterativeStore - LocalFindValue - !bytes.Equal", err)
+			}
+		}
+	}
+	// NodeIDAsString, err := instances[i].DoIterativeStore(key, value)
 	// NodeIDs := make([]ID, 0)
 	// for i := 0; i < number; i++ {
 	// 	key := keys[i]
