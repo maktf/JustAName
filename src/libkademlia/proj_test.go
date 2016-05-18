@@ -343,7 +343,9 @@ func TestDoIterativeFindValue (t *testing.T) {
 		port := instances[i - 1].SelfContact.Port
 		_, err := instances[i].DoPing(host, port)
 		if err != nil {
-			t.Error("DoPing", err)
+			t.Error("TestDoIterativeFindValue - DoPing - ", err)
+		} else {
+			
 		}
 	}
 }
