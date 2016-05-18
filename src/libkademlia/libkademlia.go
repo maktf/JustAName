@@ -390,7 +390,7 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 				}
 				
 				if v_found != nil {                 
-					return id_found, v_found, nil                         /////////store the value in the closest node!!!!!!
+					return id_found, v_found, nil                         ///need modification: store the value in the closest node!!!!!!
 				}
 			}
 			
@@ -427,7 +427,7 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 					}
 				}
 				if v_found != nil {
-					return id_found, v_found, nil                                          ///////////////store the value in the closest node!!!!
+					return id_found, v_found, nil                              ///need modification: store the value in the closest node!!!!
 				}
 			}
 			clst := sl.getClosestNodes()
