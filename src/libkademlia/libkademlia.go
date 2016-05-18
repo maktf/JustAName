@@ -321,9 +321,9 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
 	}
 }
 
-func (k *Kademlia) StoreValueRoutine(ct Contact, key ID, value []byte){
-	k.DoStore(&ct, key, value)
-}
+// func (k *Kademlia) StoreValueRoutine(ct Contact, key ID, value []byte){
+// 	k.DoStore(&ct, key, value)
+// }
 
 func (k *Kademlia) DoIterativeStore(key ID, value []byte) ([]*Contact, error) {
 	cs, err := k.DoIterativeFindNode(key)
@@ -331,7 +331,9 @@ func (k *Kademlia) DoIterativeStore(key ID, value []byte) ([]*Contact, error) {
 		return nil, &CommandFailed{"Unable to store key-value pairs iteratively"}
 	} else {
 		for _, c := range cs {
-			go k.StoreValueRoutine(*c, key, value)
+			// k.StoreValueRoutine(*c, key, value)
+			k.DoStore(c, key, value)
+			// go k.StoreValueRoutine(*c, key, value)
 		}
 		return cs, nil
 	}
@@ -374,7 +376,8 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 						     } else if fvr.Value != nil {
 						     	acs := sl.getActiveNodes()
 						     	for _, ac := range acs {
-						     		go k.StoreValueRoutine(*ac, key, fvr.Value)
+						     		// go k.StoreValueRoutine(*ac, key, fvr.Value)
+						     		k.DoStore(ac, key, fvr.Value)
 						     	}
 						     	return fvr.MsgID.AsString(), fvr.Value, nil
 						     } else {
@@ -410,7 +413,8 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 						     } else if fvr.Value != nil {
 						     	acs := sl.getActiveNodes()
 						     	for _, ac := range acs {
-						     		go k.StoreValueRoutine(*ac, key, fvr.Value)
+						     		// go k.StoreValueRoutine(*ac, key, fvr.Value)
+						     		k.DoStore(ac, key, fvr.Value)
 						     	}
 						     	return fvr.MsgID.AsString(), fvr.Value, nil
 						     } else {
