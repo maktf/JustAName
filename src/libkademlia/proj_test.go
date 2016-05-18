@@ -310,7 +310,7 @@ func TestDoIterativeStore (t *testing.T) {
 		keys[i] = key
 		values[i] = value
 		instances[i].DoStore(&instances[i].SelfContact, key, value)
-		// instances[i].DoStore(&instances[number - 1 - i].SelfContact, key, value)
+		instances[i].DoStore(&instances[number - 1 - i].SelfContact, key, value)
 	}
 	// returnedValue, _ := instances[0].LocalFindValue(keys[0])
 	// if bytes.Equal(returnedValue, values[0]) {
@@ -336,7 +336,7 @@ func TestDoIterativeStore (t *testing.T) {
 			t.Error("TestDoIterativeStore - DoIterativeStore - LocalFindValue - ", err)
 		} else {
 			if !bytes.Equal(returnedValue, value) {
-				t.Error("TestDoIterativeStore - DoIterativeStore - LocalFindValue - !bytes.Equal", err)
+				t.Error(string(returnedValue), string(value))
 			}
 		}
 	}
