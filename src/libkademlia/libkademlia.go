@@ -191,7 +191,8 @@ func (k *Kademlia) DoFindNode(contact *Contact, searchKey ID) ([]Contact, error)
 	}	
 }
 
-func (k *Kademlia) DoFindValue(contact *Contact,searchKey ID) (value []byte, contacts []Contact, err error) {
+func (k *Kademlia) DoFindValue(contact *Contact,
+	searchKey ID) (value []byte, contacts []Contact, err error) {
 	// TODO: Implement
 	//fmt.Println(host.String()+":"+strconv.Itoa(int(port)))
 
@@ -211,9 +212,6 @@ func (k *Kademlia) DoFindValue(contact *Contact,searchKey ID) (value []byte, con
 	//fmt.Println(res.MsgID)
 	if err == nil {
 		k.KB.CommandChannel <- &KBucketRequest{"main", UPDATE, nil, contact, nil}
-		for i:=0;i<len(res.Nodes);i++{
-			k.KB.CommandChannel <- &KBucketRequest{"main", UPDATE, nil, &res.Nodes[i],nil}
-		}
 		return res.Value, res.Nodes, nil
 	} else {
 		return nil, nil, &CommandFailed{
@@ -265,19 +263,21 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
 			count = 0
 			nocloser = true
 			fmt.Println("---------------------------")
-			for !sl.checkActive() && count < len(f3) {
+			for count < len(f3) {
 				select {
 					case fnr := <- chnn:
-					     if fnr.Err != nil {
-					     	sl.removeInactive(&Contact{fnr.MsgID, nil, 0})
-					     } else {
-					     	for i := 0; i < len(fnr.Nodes); i++ {
-					     		fmt.Println(fnr.Nodes[i].NodeID.AsString())
-						     	if sl.updateActiveContact(&fnr.Nodes[i]) {
-						     		nocloser = false
-						     	}        
+					     if !sl.checkActive() {
+					     	if fnr.Err != nil {
+					     		sl.removeInactive(&Contact{fnr.MsgID, nil, 0})
+					     	} else {
+					     		for i := 0; i < len(fnr.Nodes); i++ {
+					     			fmt.Println(fnr.Nodes[i].NodeID.AsString())
+					     			if sl.updateActiveContact(&fnr.Nodes[i]) {
+					     				nocloser = false
+					     			}        
+					     		}
+					     		sl.setActive(&Contact{fnr.MsgID, nil, 0})
 					     	}
-						    sl.setActive(&Contact{fnr.MsgID, nil, 0})
 					     }
 					     count++
 				    default:
@@ -299,15 +299,17 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
 				fmt.Println("NotContacted ",(*c).NodeID.AsString())
 			}
 			
-			for !sl.checkActive() && count < len(cs_a) {
+			for count < len(cs_a) {
 				select {
 					case fnr := <- chnn:
-					     if fnr.Err == nil {
-					     	for i := 0; i < len(fnr.Nodes); i++ {
-						     	sl.updateActiveContact(&fnr.Nodes[i])        
+					     if !sl.checkActive() {
+					     	if fnr.Err == nil {
+					     		for i := 0; i < len(fnr.Nodes); i++ {
+					     			sl.updateActiveContact(&fnr.Nodes[i])        
+					     		}
+					     		sl.setActive(&Contact{fnr.MsgID, nil, 0})
+					     		fmt.Println(fnr.MsgID.AsString())
 					     	}
-					     	sl.setActive(&Contact{fnr.MsgID, nil, 0})
-					     	fmt.Println(fnr.MsgID.AsString())
 					     }
 					     count++
 				    default:
@@ -321,19 +323,13 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
 	}
 }
 
-// func (k *Kademlia) StoreValueRoutine(ct Contact, key ID, value []byte){
-// 	k.DoStore(&ct, key, value)
-// }
-
 func (k *Kademlia) DoIterativeStore(key ID, value []byte) ([]*Contact, error) {
 	cs, err := k.DoIterativeFindNode(key)
 	if err != nil {
 		return nil, &CommandFailed{"Unable to store key-value pairs iteratively"}
 	} else {
 		for _, c := range cs {
-			// k.StoreValueRoutine(*c, key, value)
-			k.DoStore(c, key, value)
-			// go k.StoreValueRoutine(*c, key, value)
+			k.DoStore(c, key, value)                       
 		}
 		return cs, nil
 	}
@@ -360,6 +356,8 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 			chnn := make(chan FindValueResult)
 			var count int
 			nocloser := false
+			var v_found []byte
+			var id_found string
 			for !sl.checkActive() && !nocloser {
 				f3 := sl.getAlphaNotContacted()
 				for _, c := range f3 {
@@ -368,30 +366,31 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 				
 				count = 0
 				nocloser = true
-				for !sl.checkActive() && count < len(f3) {
+				for count < len(f3) {                                                     ///loop until all routines return results 
 					select {
 						case fvr := <- chnn:
-						     if fvr.Err != nil {
-						    	sl.removeInactive(&Contact{fvr.MsgID, nil, 0})
-						     } else if fvr.Value != nil {
-						     	acs := sl.getActiveNodes()
-						     	for _, ac := range acs {
-						     		// go k.StoreValueRoutine(*ac, key, fvr.Value)
-						     		k.DoStore(ac, key, fvr.Value)
-						     	}
-						     	return fvr.MsgID.AsString(), fvr.Value, nil
-						     } else {
-						     	for i := 0; i < len(fvr.Nodes); i++ {
-						     		if sl.updateActiveContact(&fvr.Nodes[i]) {     //what about the active nodes?
-						     			nocloser = false    				     	
-						     		} 
-						     	}
-						     	sl.setActive(&Contact{fvr.MsgID, nil, 0})   
+						     if !sl.checkActive() && v_found == nil {
+						     	if fvr.Err != nil {
+						     		sl.removeInactive(&Contact{fvr.MsgID, nil, 0})
+						     	} else if fvr.Value != nil {
+						     		v_found = fvr.Value
+						     		id_found = fvr.MsgID.AsString()
+						     	} else {
+						     		for i := 0; i < len(fvr.Nodes); i++ {
+						     			if sl.updateActiveContact(&fvr.Nodes[i]) {     
+						     				nocloser = false    				     	
+						     			} 
+						     		}
+						     		sl.setActive(&Contact{fvr.MsgID, nil, 0})   
+						     	}						     	
 						     }
 						     count++
-						     
 					    default:                                       
 					}
+				}
+				
+				if v_found != nil {                 
+					return id_found, v_found, nil                         /////////store the value in the closest node!!!!!!
 				}
 			}
 			
@@ -405,33 +404,34 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 					go k.FindValueRoutine(*c, key, chnn)
 				}
 				
-				for !sl.checkActive() && count < len(cs_a) {
+				for count < len(cs_a) {
 					select {
 						case fvr := <- chnn:
-						     if fvr.Err != nil {
-						     	sl.removeInactive(&Contact{fvr.MsgID, nil, 0})
-						     } else if fvr.Value != nil {
-						     	acs := sl.getActiveNodes()
-						     	for _, ac := range acs {
-						     		// go k.StoreValueRoutine(*ac, key, fvr.Value)
-						     		k.DoStore(ac, key, fvr.Value)
-						     	}
-						     	return fvr.MsgID.AsString(), fvr.Value, nil
-						     } else {
-						     	for i := 0; i < len(fvr.Nodes); i++ {
-						     		sl.updateActiveContact(&fvr.Nodes[i])        
-					     	    }
-						     	sl.setActive(&Contact{fvr.MsgID, nil, 0})
-					         }
-					         count++
-					         
+						     if !sl.checkActive() && v_found == nil {
+						     	if fvr.Err != nil {
+						     		sl.removeInactive(&Contact{fvr.MsgID, nil, 0})
+						     	} else if fvr.Value != nil {
+						     		v_found = fvr.Value
+						     		id_found = fvr.MsgID.AsString()
+						     	} else {
+						     		for i := 0; i < len(fvr.Nodes); i++ {
+						     			if sl.updateActiveContact(&fvr.Nodes[i]) {     
+						     				nocloser = false    				     	
+						     			} 
+						     		}
+						     		sl.setActive(&Contact{fvr.MsgID, nil, 0})   
+						     	}						     	
+						     }
+						     count++				         
 				        default:
 					}
 				}
+				if v_found != nil {
+					return id_found, v_found, nil                                          ///////////////store the value in the closest node!!!!
+				}
 			}
 			clst := sl.getClosestNodes()
-			return clst[0], nil, &CommandFailed{"Key not found"}
-			// can't find the value, return the id of the closest node and a key not found message 
+			return clst[0], nil, &CommandFailed{"Key not found"} 
 		}
 	} else {
 		return k.SelfContact.NodeID.AsString(), nil, &CommandFailed{"Timeout"}
