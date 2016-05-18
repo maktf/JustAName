@@ -204,7 +204,6 @@ func TestFindValue(t *testing.T) {
 	foundValue, contacts, err = instance1.DoFindValue(contact2, wrongKey)
 	if contacts == nil || len(contacts) < 10 {
 		t.Error("Searching for a wrong ID did not return contacts", len(contacts))
-		break
 	}
 
 	// TODO: Check that the correct contacts were stored
@@ -292,7 +291,7 @@ func TestDoIterativeFindNode (t *testing.T) {
 }
 
 func TestDoIterativeStore (t *testing.T) {
-	number := 5
+	number := 15
 	instances := make([]*Kademlia, number)
 	for i := 0; i < number; i++ {
 		address := "localhost:" + strconv.Itoa(8200 + i)
@@ -324,22 +323,36 @@ func TestDoIterativeStore (t *testing.T) {
 		key := keys[i]
 		value := values[i]
 		value = Value("Update - " + string(value))
+		// _, err := instances[i].DoIterativeStore(key, value)
 		storedContacts, err := instances[i].DoIterativeStore(key, value)
 		if err != nil {
 			t.Error("TestDoIterativeStore - DoIterativeStore - ", err)
 			break
 		} else {
-			for j := 0; j < len(storedContacts); j++ {
-				for k := 0; k < number; k++ {
-					if storedContacts[j].NodeID == instances[k].NodeID {
-						foundValue, err := instances[k].LocalFindValue(key)
-						if err != nil {
-							t.Error("TestDoIterativeStore - LocalFindValue - ", err)
-							break
-						} else {
-							if !bytes.Equal(foundValue, value) {
-								t.Error("TestDoIterativeStore - LocalFindValue - Result")
-								break								
+			foundCounter := 0
+			for j := 0; j < number; j++ {
+				foundValue, err := instances[j].LocalFindValue(key)
+				if err == nil {
+					if bytes.Equal(foundValue, value) {
+						foundCounter++							
+					}
+				}
+			}
+			if foundCounter != len(storedContacts) {
+				t.Error("TestDoIterativeStore - Global Search - Number Check")
+			} else {
+				for j := 0; j < len(storedContacts); j++ {
+					for k := 0; k < number; k++ {
+						if storedContacts[j].NodeID == instances[k].NodeID {
+							foundValue, err := instances[k].LocalFindValue(key)
+							if err != nil {
+								t.Error("TestDoIterativeStore - LocalFindValue - ", err)
+								break
+							} else {
+								if !bytes.Equal(foundValue, value) {
+									t.Error("TestDoIterativeStore - LocalFindValue - Result")
+									break								
+								}
 							}
 						}
 					}
