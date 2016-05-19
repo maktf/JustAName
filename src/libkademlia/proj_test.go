@@ -219,7 +219,7 @@ func TestFindValue(t *testing.T) {
 }
 
 func TestDoIterativeFindNode (t *testing.T) {
-	number := 5
+	number := 10
 	instances := make([]*Kademlia, number)
 	for i := 0; i < number; i++ {
 		address := "localhost:" + strconv.Itoa(7410 + i)
@@ -291,7 +291,7 @@ func TestDoIterativeFindNode (t *testing.T) {
 }
 
 func TestDoIterativeStore (t *testing.T) {
-	number := 5
+	number := 10
 	instances := make([]*Kademlia, number)
 	for i := 0; i < number; i++ {
 		address := "localhost:" + strconv.Itoa(7552 + i)
@@ -363,7 +363,7 @@ func TestDoIterativeStore (t *testing.T) {
 }
 
 func TestDoIterativeFindValue (t *testing.T) {
-	// number := 5
+	// number := 10
 	// instances := make([]*Kademlia, number)
 	// for i := 0; i < number; i++ {
 	// 	address := "localhost:" + strconv.Itoa(7610 + i)
@@ -398,7 +398,7 @@ func TestDoIterativeFindValue (t *testing.T) {
 	// 		if err != nil {
 	// 			t.Error("TestDoIterativeFindValue - DoIterativeFindValue - ", err)
 	// 		} else {
-
+				
 	// 		}
 	// 	}
 	// }
