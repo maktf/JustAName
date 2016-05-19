@@ -402,4 +402,44 @@ func TestDoIterativeFindValue (t *testing.T) {
 	// 		}
 	// 	}
 	// }
+	
+	//Test: can't find closer node, but the value exists, and the value should be returned
+	instances := make([]*Kademlia, 5)
+	for i := 0; i<5; i++ {
+		address := "localhost:" + strconv.Itoa(7610 + i)
+		instances[i] = NewKademlia(address)
+		if i==0 {
+			instances[0].DoPing(instances[0].SelfContact.Host, instances[0].SelfContact.Port)
+		} else {
+			instances[i].DoPing(instances[i-1].SelfContact.Host, instances[i-1].SelfContact.Port)
+		}
+	}
+	instances[4].DoStore(&instances[4].SelfContact, instances[1].SelfContact.NodeID, []byte(string(10)))
+	idstr, value, err := instances[0].DoIterativeFindValue(instances[1].SelfContact.NodeID)
+	if err != nil {
+		t.Error("TestDoIterativeFindValue - ", err)
+	} else {
+		id, _ := IDFromString(idstr)
+		if !id.Equals(instances[4].SelfContact.NodeID) {
+			t.Error("TestDoIterativeFindValue - Value found at incorrect node")
+		}
+		
+		v := []byte(string(10))
+		if len(v) != len(value) {
+			t.Error("TestDoIterativeFindValue - Value is incorrect") 	
+		} else {
+			for i := 0 ; i < len(v); i++ {
+				if value[i] != v[i] {
+					t.Error("TestDoIterativeFindValue - Value is incorrect")
+				}
+			} 
+		}		
+	}
+	
+	//Test: looking for the key that doesn't exist
+	newkey := NewRandomID()
+	idstr, value, err = instances[0].DoIterativeFindValue(newkey)
+	if err == nil {
+		t.Error("TestDoIterativeFindValue - Impossible")
+	} 
 }
