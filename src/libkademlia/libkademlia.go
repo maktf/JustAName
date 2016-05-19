@@ -243,7 +243,7 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
 		var cs_a []*Contact
 		for _, c := range cs {
 			cs_a = append(cs_a, &c)
-			fmt.Println("initial ",c.NodeID.AsString())
+			//fmt.Println("initial ",c.NodeID.AsString())
 		}
 		sl := new(ShortList)
 		sl.initializeShortList(cs_a, id)
@@ -252,17 +252,17 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
 		var count int
 		nocloser := false
 		for !sl.checkActive() && !nocloser {
-			fmt.Println("\n\n")
+			//fmt.Println("\n\n")
 		    sl.printStatus()
-		    fmt.Println("\n\n")
+		    //fmt.Println("\n\n")
 			f3 := sl.getAlphaNotContacted()
 			for _, c := range f3 {
 				go k.FindNodeRoutine(*c, id, chnn)
-				fmt.Println("alpha ",(*c).NodeID.AsString())
+				//fmt.Println("alpha ",(*c).NodeID.AsString())
 			}
 			count = 0
 			nocloser = true
-			fmt.Println("---------------------------")
+			//fmt.Println("---------------------------")
 			for count < len(f3) {
 				select {
 					case fnr := <- chnn:
@@ -271,7 +271,7 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
 					     		sl.removeInactive(&Contact{fnr.MsgID, nil, 0})
 					     	} else {
 					     		for i := 0; i < len(fnr.Nodes); i++ {
-					     			fmt.Println(fnr.Nodes[i].NodeID.AsString())
+				//	     			fmt.Println(fnr.Nodes[i].NodeID.AsString())
 					     			if sl.updateActiveContact(&fnr.Nodes[i]) {
 					     				nocloser = false
 					     			}        
@@ -285,7 +285,7 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
 			}
 		}
 		
-		fmt.Println("\n\n")
+		//fmt.Println("\n\n")
 		sl.printStatus()
 		
 		for !sl.checkActive() {
@@ -296,7 +296,7 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
 			count = 0
 			for _, c := range cs_a {
 				go k.FindNodeRoutine(*c, id, chnn)
-				fmt.Println("NotContacted ",(*c).NodeID.AsString())
+		//		fmt.Println("NotContacted ",(*c).NodeID.AsString())
 			}
 			
 			for count < len(cs_a) {
@@ -308,7 +308,7 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
 					     			sl.updateActiveContact(&fnr.Nodes[i])        
 					     		}
 					     		sl.setActive(&Contact{fnr.MsgID, nil, 0})
-					     		fmt.Println(fnr.MsgID.AsString())
+		//			     		fmt.Println(fnr.MsgID.AsString())
 					     	}
 					     }
 					     count++
