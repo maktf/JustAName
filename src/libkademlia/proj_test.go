@@ -158,7 +158,6 @@ func TestFindNode(t *testing.T) {
 	return
 }
 
-
 func TestFindValue(t *testing.T) {
 	// tree structure;
 	// A->B->tree
@@ -219,9 +218,8 @@ func TestFindValue(t *testing.T) {
 	return
 }
 
-<<<<<<< HEAD
-func TestIterativeFindNode(t *testing.T) {
-	number := 21
+func TestDoIterativeFindNode (t *testing.T) {
+	number := 5
 	instances := make([]*Kademlia, number)
 	for i := 0; i < number; i++ {
 		address := "localhost:" + strconv.Itoa(7410 + i)
@@ -236,71 +234,64 @@ func TestIterativeFindNode(t *testing.T) {
 			break
 		}
 	}
-	contacts, err := instances[0].DoIterativeFindNode(instances[20].NodeID)
-	if err!= nil{
-		t.Error("TestIterativeFindNode - error in finding-" ,err)
-	}
-	if len(contacts)!= k{
-		t.Error("TestIterativeFindNode - return less than k contacts",err)
-	}
-	check := false
-	for _,contact := range contacts{
-		if contact.NodeID.Equals(instances[21].NodeID){
-			check = true
-			break
-		}
-	}
-	if check == false{
-		t.Error("TestIterativeFindNode - did not find target contact",err)
-	}
-	return 
-}
-
-func TestIterativeFindValue(t *testing.T) {
-	number := 21
-	instances := make([]*Kademlia, number)
 	for i := 0; i < number; i++ {
-		address := "localhost:" + strconv.Itoa(8100 + i)
-		instances[i] = NewKademlia(address)
-	}
-	for i := 1; i < number; i++ {
-		host := instances[i - 1].SelfContact.Host
-		port := instances[i - 1].SelfContact.Port
-		_, err := instances[i].DoPing(host, port)
-		if err != nil {
-			t.Error("TestDoIterativeFindValue - DoPing - ", err)
-			break
+		for j := 0; j < number; j++ {
+			contacts, err := instances[i].DoIterativeFindNode(instances[j].NodeID)
+			if err != nil {
+				t.Error("TestDoIterativeFindNode - DoIterativeFindNode - ", err)
+			} else {
+				if len(contacts) == k {
+					for x := 0; x < len(contacts); x++ {
+						client, err := rpc.DialHTTPPath("tcp", contacts[x].Host.String() + ":" + strconv.Itoa(int(contacts[x].Port)), rpc.DefaultRPCPath + strconv.Itoa(int(contacts[x].Port)))
+						if err != nil {
+							t.Error("TestDoIterativeFindNode - rpc.DialHTTPPath - ", err)
+							break
+						} else {
+							go func() {
+								time.Sleep(time.Millisecond * 300)
+								client.Close()
+							} ()
+							findNodeRequest := FindNodeRequest{instances[i].SelfContact, NewRandomID(), instances[j].NodeID}
+							var findNodeResult FindNodeResult
+							err = client.Call("KademliaRPC.FindNode", findNodeRequest, &findNodeResult)
+							if err != nil {
+								t.Error("TestDoIterativeFindNode - DoIterativeFindNode - Exist InActive Node - ", err)
+								break
+							}
+						}
+					}
+				} else {
+					var minDistance int
+					minDistance = - 1
+					for y := 0; y < len(contacts); y++ {
+						currentDistance := distance(instances[i].SelfContact.NodeID, contacts[y].NodeID)
+						if currentDistance > minDistance {
+							minDistance = currentDistance
+						}
+					}					
+					for y := 0; y < len(contacts); y++ {
+						returnedContacts, err := instances[i].DoFindNode(contacts[y], instances[j].NodeID)
+						if err != nil {
+							t.Error("TestDoIterativeFindNode - returnedContacts - DoFindNode - ", err)
+							break
+						} else {
+							for z := 0; z < len(returnedContacts); z++ {
+								currentDistance := distance(instances[i].SelfContact.NodeID, returnedContacts[z].NodeID)
+								if currentDistance > minDistance {
+									t.Error("TestDoIterativeFindNode - Wrong Results")
+									break
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 	}
-	value := make([]byte)
-	value = append(value, '1')
-	value = append(value, '2')
-	key := NewRandomID()
-	wrongKey := NewRandomID()
-	instances[0].DoStore(&instances[20].SelfContact,instances[20].NodeID,value)
-
-	contacts, err := instances[0].DoIterativeFindValue(instances[20].NodeID)
-	if err!= nil{
-		t.Error("TestIterativeFindValue - error in finding-" ,err)
-	}
-	if len(contacts)!= k{
-		t.Error("TestIterativeFindNode - return less than k contacts",err)
-	}
-	check := false
-	for _,contact := range contacts{
-		if contact.NodeID.Equals(instances[21].NodeID){
-			check = true
-			break
-		}
-	}
-	if check == false{
-		t.Error("TestIterativeFindNode - did not find target contact",err)
-	}
-	return 
 }
 
 func TestDoIterativeStore (t *testing.T) {
-	number := 10
+	number := 5
 	instances := make([]*Kademlia, number)
 	for i := 0; i < number; i++ {
 		address := "localhost:" + strconv.Itoa(7552 + i)
@@ -372,34 +363,43 @@ func TestDoIterativeStore (t *testing.T) {
 }
 
 func TestDoIterativeFindValue (t *testing.T) {
-	number := 10
-	instances := make([]*Kademlia, number)
-	for i := 0; i < number; i++ {
-		address := "localhost:" + strconv.Itoa(7610 + i)
-		instances[i] = NewKademlia(address)
-	}
-	for i := 1; i < number; i++ {
-		host := instances[i - 1].SelfContact.Host
-		port := instances[i - 1].SelfContact.Port
-		_, err := instances[i].DoPing(host, port)
-		if err != nil {
-			t.Error("TestDoIterativeFindValue - DoPing - ", err)
-			break
-		}
-	}
-	keys := make([]ID, number)
-	values := make([]Value, number)
-	for i := 0; i < number; i++ {
-		key := NewRandomID()
-		if i % 2 == 0 {
-			key = instances[i].NodeID
-		}
-		value := Value("TestDoIterativeStore - " + instances[i].NodeID.AsString() + " - to store - key = " + key.AsString())
-		keys[i] = key
-		values[i] = value
-		instances[i].DoStore(&instances[i].SelfContact, key, value)
-		instances[i].DoStore(&instances[number - 1 - i].SelfContact, key, value)
-		instances[i].DoIterativeStore(key, value)
-	}
-	
+	// number := 5
+	// instances := make([]*Kademlia, number)
+	// for i := 0; i < number; i++ {
+	// 	address := "localhost:" + strconv.Itoa(7610 + i)
+	// 	instances[i] = NewKademlia(address)
+	// }
+	// for i := 1; i < number; i++ {
+	// 	host := instances[i - 1].SelfContact.Host
+	// 	port := instances[i - 1].SelfContact.Port
+	// 	_, err := instances[i].DoPing(host, port)
+	// 	if err != nil {
+	// 		t.Error("TestDoIterativeFindValue - DoPing - ", err)
+	// 		break
+	// 	}
+	// }
+	// keys := make([]ID, number)
+	// values := make([]Value, number)
+	// for i := 0; i < number; i++ {
+	// 	key := NewRandomID()
+	// 	if i % 2 == 0 {
+	// 		key = instances[i].NodeID
+	// 	}
+	// 	value := Value("TestDoIterativeStore - " + instances[i].NodeID.AsString() + " - to store - key = " + key.AsString())
+	// 	keys[i] = key
+	// 	values[i] = value
+	// 	instances[i].DoStore(&instances[i].SelfContact, key, value)
+	// 	instances[i].DoStore(&instances[number - 1 - i].SelfContact, key, value)
+	// 	instances[i].DoIterativeStore(key, value)
+	// }
+	// for i := 0; i < number; i++ {
+	// 	for j := 0; j < number; j++ {
+	// 		id, value, err := instances[i].DoIterativeFindValue(keys[j])
+	// 		if err != nil {
+	// 			t.Error("TestDoIterativeFindValue - DoIterativeFindValue - ", err)
+	// 		} else {
+
+	// 		}
+	// 	}
+	// }
 }
