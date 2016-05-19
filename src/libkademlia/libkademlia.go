@@ -389,7 +389,20 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 					}
 				}
 				
-				if v_found != nil {                 
+				if v_found != nil {    
+					ID_found,_ := IDFromString(id_found)             
+					active := sl.getActiveNodes()
+					dis := -1
+					var toStore *Contact
+					for _,con := range active{
+						if !ID_found.Equals(con.NodeID){
+							if temp := distance(ID_found,con.NodeID); temp >dis{
+								dis = temp
+								toStore = con
+							}
+						}
+					}
+					k.DoStore(toStore,key,v_found)
 					return id_found, v_found, nil                         ///need modification: store the value in the closest node!!!!!!
 				}
 			}
@@ -427,10 +440,24 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 					}
 				}
 				if v_found != nil {
-					return id_found, v_found, nil                              ///need modification: store the value in the closest node!!!!
+					ID_found,_ := IDFromString(id_found)             
+					active := sl.getActiveNodes()
+					dis := -1
+					var toStore *Contact
+					for _,con := range active{
+						if !ID_found.Equals(con.NodeID){
+							if temp := distance(ID_found,con.NodeID); temp >dis{
+								dis = temp
+								toStore = con
+							}
+						}
+					}
+					k.DoStore(toStore,key,v_found)
+					return id_found, v_found, nil                                ///need modification: store the value in the closest node!!!!
 				}
 			}
 			clst := sl.getClosestNodes()
+
 			return clst[0], nil, &CommandFailed{"Key not found"} 
 		}
 	} else {

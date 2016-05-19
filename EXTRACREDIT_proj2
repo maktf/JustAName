@@ -1,0 +1,8 @@
+TestIterativeFindNode:
+The nodes are constructed in the way of:
+a <- b <- c <- d ...
+so that a cannot find d in one cycle. In total, 21 nodes are initialized in order to guarantee the procedure to return 20 contacts, which is examined in the test. In addition, the target contact is examined whether it is returned in the result. Because there are only 21 nodes in the network, the target contact has to be in the result list.
+
+TestIterativeFindValue:
+The nodes are constructed in the same way as above.
+
