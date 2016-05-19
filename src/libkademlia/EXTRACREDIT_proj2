@@ -6,6 +6,8 @@ func TestDoIterativeFindNode (t *testing.T) {
 	Initial all network like a linked list:
 	[0] <- [1] <- [2] <- [3] <- [4] <- ... <- [number - 1]
 
+	Given key and value arrays
+
 	For each node to DoIterativeFindNode each node (including itself)
 
 	According to definition, if length of returned node list is equal to 
@@ -15,13 +17,15 @@ func TestDoIterativeFindNode (t *testing.T) {
 	of each node in shortlist to source node is greater than or equal to this
 	shortlist' shortest distantce.
 
-	if passing the above possible conditions, this design matchs requirement
+	If passing the above possible conditions, this design matchs requirement
 }
 
 func TestDoIterativeFindNode (t *testing.T) {
 	func TestDoIterativeFindNode (t *testing.T) {
 	Initial all network like a linked list:
 	[0] <- [1] <- [2] <- [3] <- [4] <- ... <- [number - 1]
+
+	Given key and value arrays
 
 	DoStore function paif of (key, value) in each node in the above network
 
@@ -34,7 +38,20 @@ func TestDoIterativeFindNode (t *testing.T) {
 	If their NodeId is the same, this design matchs requirement
 }
 
-func TestDoIterativeFindValue (t *testing.T) {
+func TestDoIterativeFindValueI (t *testing.T) {
+	Initial all network like a linked list:
+	[0] <- [1] <- [2] <- [3] <- [4] <- ... <- [number - 1]
+
+	Given key and value arrays
+
+	if DoIterativeFindValue function find the given key, compare the returned value and the given value
+	else DoIterativeFindValue Function do not the given key, calculate the distance from key to returned ID
+		and if the above distance is less than or equal to the closest distance
+
+	if passing the above possible conditions, this design matchs requirement
+}
+
+func TestDoIterativeFindValueII (t *testing.T) {
         Test 1:
 	Initial all network like a linked list:
 	[0] <- [1] <- [2] <- [3] <- [4] <- ... <- [number - 1]
