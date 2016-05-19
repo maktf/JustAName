@@ -219,7 +219,6 @@ func TestFindValue(t *testing.T) {
 	return
 }
 
-<<<<<<< HEAD
 func TestIterativeFindNode(t *testing.T) {
 	number := 21
 	instances := make([]*Kademlia, number)
