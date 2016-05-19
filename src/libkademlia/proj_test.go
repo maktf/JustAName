@@ -363,34 +363,34 @@ func TestDoIterativeStore (t *testing.T) {
 }
 
 func TestDoIterativeFindValue (t *testing.T) {
-	// number := 10
-	// instances := make([]*Kademlia, number)
-	// for i := 0; i < number; i++ {
-	// 	address := "localhost:" + strconv.Itoa(7610 + i)
-	// 	instances[i] = NewKademlia(address)
-	// }
-	// for i := 1; i < number; i++ {
-	// 	host := instances[i - 1].SelfContact.Host
-	// 	port := instances[i - 1].SelfContact.Port
-	// 	_, err := instances[i].DoPing(host, port)
-	// 	if err != nil {
-	// 		t.Error("TestDoIterativeFindValue - DoPing - ", err)
-	// 		break
-	// 	}
-	// }
-	// keys := make([]ID, number)
-	// values := make([]Value, number)
-	// for i := 0; i < number; i++ {
-	// 	key := NewRandomID()
-	// 	if i % 2 == 0 {
-	// 		key = instances[i].NodeID
-	// 	}
-	// 	value := Value("TestDoIterativeStore - " + instances[i].NodeID.AsString() + " - to store - key = " + key.AsString())
-	// 	keys[i] = key
-	// 	values[i] = value
-	// 	instances[i].DoStore(&instances[i].SelfContact, key, value)
-	// 	instances[i].DoStore(&instances[number - 1 - i].SelfContact, key, value)
-	// 	instances[i].DoIterativeStore(key, value)
-	// }
+	number := 10
+	instances := make([]*Kademlia, number)
+	for i := 0; i < number; i++ {
+		address := "localhost:" + strconv.Itoa(7610 + i)
+		instances[i] = NewKademlia(address)
+	}
+	for i := 1; i < number; i++ {
+		host := instances[i - 1].SelfContact.Host
+		port := instances[i - 1].SelfContact.Port
+		_, err := instances[i].DoPing(host, port)
+		if err != nil {
+			t.Error("TestDoIterativeFindValue - DoPing - ", err)
+			break
+		}
+	}
+	keys := make([]ID, number)
+	values := make([]Value, number)
+	for i := 0; i < number; i++ {
+		key := NewRandomID()
+		if i % 2 == 0 {
+			key = instances[i].NodeID
+		}
+		value := Value("TestDoIterativeStore - " + instances[i].NodeID.AsString() + " - to store - key = " + key.AsString())
+		keys[i] = key
+		values[i] = value
+		instances[i].DoStore(&instances[i].SelfContact, key, value)
+		instances[i].DoStore(&instances[number - 1 - i].SelfContact, key, value)
+		instances[i].DoIterativeStore(key, value)
+	}
 	
 }
