@@ -35,6 +35,19 @@ func TestDoIterativeFindNode (t *testing.T) {
 }
 
 func TestDoIterativeFindValue (t *testing.T) {
+        Test 1:
 	Initial all network like a linked list:
 	[0] <- [1] <- [2] <- [3] <- [4] <- ... <- [number - 1]
+	
+	Test 2:
+	Initial network like (a <- b means b pings a):
+	[0] <- [1] <- [2] <- [3] <- [4]
+	Use [1]'s ID as key, 10 as value, and store this key-value at [4].
+	Therefore, when [0] initials a iterativeFindValue to find the above key-value, 
+	the call can't find any closer node than [1]. And it will initial FindValue 
+	to all the uncontacted nodes in the shortlist. Finally, the value is found and returned.
+	
+	Test 3:
+	Use the same network at Test2. [0] initials a iterativeFindValue to find the key that doesn't exist.
+	And it should return a error indicating value isn't found.
 }
