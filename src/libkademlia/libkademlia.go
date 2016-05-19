@@ -286,7 +286,7 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
 		}
 		
 		//fmt.Println("\n\n")
-		sl.printStatus()
+		//sl.printStatus()
 		
 		for !sl.checkActive() {
 			cs_a = sl.getAllNotContacted()
