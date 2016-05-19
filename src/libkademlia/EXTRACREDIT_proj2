@@ -1,0 +1,40 @@
+EXTRACREDIT_proj2
+
+Honghao Xu - Weifeng Huang - Yuanhui Yang
+
+func TestDoIterativeFindNode (t *testing.T) {
+	Initial all network like a linked list:
+	[0] <- [1] <- [2] <- [3] <- [4] <- ... <- [number - 1]
+
+	For each node to DoIterativeFindNode each node (including itself)
+
+	According to definition, if length of returned node list is equal to 
+	constant k, then check whether each node in shortlist is active or 
+	inactive by calling time; else if length of returned node list is 
+	less than constant k, then check whether any caliing returned node' distance 
+	of each node in shortlist to source node is greater than or equal to this
+	shortlist' shortest distantce.
+
+	if passing the above possible conditions, this design matchs requirement
+}
+
+func TestDoIterativeFindNode (t *testing.T) {
+	func TestDoIterativeFindNode (t *testing.T) {
+	Initial all network like a linked list:
+	[0] <- [1] <- [2] <- [3] <- [4] <- ... <- [number - 1]
+
+	DoStore function paif of (key, value) in each node in the above network
+
+	DoIterativeStore function to UPDATE paif of (key, updated_value) in each 
+	node in the above network
+
+	Compare each node by LocalFindValue function with the above DoIterativeStore 
+	function returned nodes to check
+
+	If their NodeId is the same, this design matchs requirement
+}
+
+func TestDoIterativeFindValue (t *testing.T) {
+	Initial all network like a linked list:
+	[0] <- [1] <- [2] <- [3] <- [4] <- ... <- [number - 1]
+}
