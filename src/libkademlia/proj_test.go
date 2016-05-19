@@ -362,51 +362,66 @@ func TestDoIterativeStore (t *testing.T) {
 	}
 }
 
-func TestDoIterativeFindValue (t *testing.T) {
-	// number := 5
-	// instances := make([]*Kademlia, number)
-	// for i := 0; i < number; i++ {
-	// 	address := "localhost:" + strconv.Itoa(7610 + i)
-	// 	instances[i] = NewKademlia(address)
-	// }
-	// for i := 1; i < number; i++ {
-	// 	host := instances[i - 1].SelfContact.Host
-	// 	port := instances[i - 1].SelfContact.Port
-	// 	_, err := instances[i].DoPing(host, port)
-	// 	if err != nil {
-	// 		t.Error("TestDoIterativeFindValue - DoPing - ", err)
-	// 		break
-	// 	}
-	// }
-	// keys := make([]ID, number)
-	// values := make([]Value, number)
-	// for i := 0; i < number; i++ {
-	// 	key := NewRandomID()
-	// 	if i % 2 == 0 {
-	// 		key = instances[i].NodeID
-	// 	}
-	// 	value := Value("TestDoIterativeStore - " + instances[i].NodeID.AsString() + " - to store - key = " + key.AsString())
-	// 	keys[i] = key
-	// 	values[i] = value
-	// 	instances[i].DoStore(&instances[i].SelfContact, key, value)
-	// 	instances[i].DoStore(&instances[number - 1 - i].SelfContact, key, value)
-	// 	instances[i].DoIterativeStore(key, value)
-	// }
-	// for i := 0; i < number; i++ {
-	// 	for j := 0; j < number; j++ {
-	// 		id, value, err := instances[i].DoIterativeFindValue(keys[j])
-	// 		if err != nil {
-	// 			t.Error("TestDoIterativeFindValue - DoIterativeFindValue - ", err)
-	// 		} else {
-
-	// 		}
-	// 	}
-	// }
-	
-	//Test: can't find closer node, but the value exists, and the value should be returned
-	instances := make([]*Kademlia, 5)
-	for i := 0; i<5; i++ {
+func TestDoIterativeFindValueI (t *testing.T) {
+	number := 5
+	instances := make([]*Kademlia, number)
+	for i := 0; i < number; i++ {
 		address := "localhost:" + strconv.Itoa(7610 + i)
+		instances[i] = NewKademlia(address)
+	}
+	for i := 1; i < number; i++ {
+		host := instances[i - 1].SelfContact.Host
+		port := instances[i - 1].SelfContact.Port
+		_, err := instances[i].DoPing(host, port)
+		if err != nil {
+			t.Error("TestDoIterativeFindValue - DoPing - ", err)
+			break
+		}
+	}
+	keys := make([]ID, number)
+	values := make([]Value, number)
+	for i := 0; i < number; i++ {
+		key := NewRandomID()
+		if i % 2 == 0 {
+			key = instances[i].NodeID
+		}
+		value := Value("TestDoIterativeStore - " + instances[i].NodeID.AsString() + " - to store - key = " + key.AsString())
+		keys[i] = key
+		values[i] = value
+		instances[i].DoStore(&instances[i].SelfContact, key, value)
+		instances[i].DoStore(&instances[number - 1 - i].SelfContact, key, value)
+		instances[i].DoIterativeStore(key, value)
+	}
+	for i := 0; i < number; i++ {
+		for j := 0; j < number; j++ {
+			id, value, err := instances[i].DoIterativeFindValue(keys[j])
+			if err != nil {
+				var minDistance int
+				minDistance = - 1
+				for y := 0; y < number; y++ {
+					currentDistance := distance(keys[j], instances[y].NodeID)
+					if currentDistance > minDistance {
+						minDistance = currentDistance
+					}
+				}
+				id_, _ := IDFromString(id)
+				if distance(keys[j], id_) > minDistance {
+					t.Error("TestDoIterativeFindValue - DoIterativeFindValue - NodeID - Match - ", err)
+				}
+			} else {
+				if !bytes.Equal(value, values[j]) {
+					t.Error("TestDoIterativeFindValue - DoIterativeFindValue - Value - Match - Problem - ", err)
+				}
+			}
+		}
+	}
+}
+
+func TestDoIterativeFindValueII (t *testing.T) {
+	number := 5
+	instances := make([]*Kademlia, number)
+	for i := 0; i<5; i++ {
+		address := "localhost:" + strconv.Itoa(8610 + i)
 		instances[i] = NewKademlia(address)
 		if i==0 {
 			instances[0].DoPing(instances[0].SelfContact.Host, instances[0].SelfContact.Port)
@@ -441,5 +456,5 @@ func TestDoIterativeFindValue (t *testing.T) {
 	idstr, value, err = instances[0].DoIterativeFindValue(newkey)
 	if err == nil {
 		t.Error("TestDoIterativeFindValue - Impossible")
-	} 
+	}
 }
