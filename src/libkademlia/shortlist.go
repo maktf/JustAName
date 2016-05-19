@@ -1,9 +1,5 @@
 package libkademlia
 
-import(
-	"fmt"
-)
-
 type ShortList struct{
 	active map[string]bool
 	list map[string]*Contact
@@ -41,7 +37,7 @@ func (shortList *ShortList) updateActiveContact(newContact *Contact) bool{
 	id := newContact.NodeID.AsString()
 	if _,ok := shortList.list[id]; ok == false{
 		shortList.list[id] = newContact
-		fmt.Println("Insert: ", id, " ", newContact.NodeID.AsString())
+		//fmt.Println("Insert: ", id, " ", newContact.NodeID.AsString())
 		if dis>shortList.shortestDistance{
 			shortList.closestNode = make([]string,0)
 			shortList.closestNode = append(shortList.closestNode,id)
@@ -87,7 +83,7 @@ func (shortList *ShortList) getAlphaNotContacted() []*Contact{
 	for j:= 0; i<alpha && j<len(shortList.closestNode);j++{
 		if _,ok := shortList.calling[shortList.closestNode[j]]; ok == false{
 			res = append(res, shortList.list[shortList.closestNode[j]])
-			fmt.Println("getAlpha: ", shortList.closestNode[j], " ", shortList.list[shortList.closestNode[j]].NodeID.AsString())
+			//fmt.Println("getAlpha: ", shortList.closestNode[j], " ", shortList.list[shortList.closestNode[j]].NodeID.AsString())
 			shortList.calling[shortList.closestNode[j]] = true
 			i++
 		}
@@ -99,7 +95,7 @@ func (shortList *ShortList) getAlphaNotContacted() []*Contact{
 			_, ok_active := shortList.active[id]
 			if ok_active == false && ok_calling == false && ok_remove == false {
 				res = append(res, contact)
-				fmt.Println("<alpha: ", contact.NodeID.AsString())
+				//fmt.Println("<alpha: ", contact.NodeID.AsString())
 				i++
 			}
 			
@@ -109,9 +105,9 @@ func (shortList *ShortList) getAlphaNotContacted() []*Contact{
 		}
 	}
 	
-	for _, r := range res {
-	     fmt.Println("result: ", (*r).NodeID.AsString())
-	}
+	//for _, r := range res {
+	//     fmt.Println("result: ", (*r).NodeID.AsString())
+	//}
 	 
 	return res
 
