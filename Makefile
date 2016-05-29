@@ -1,4 +1,4 @@
 all:
-	export GOPATH=/home/yuanhui/GitHub/JustAName && go install kademlia && ./bin/kademlia localhost:7890 localhost:7890
+	export GOPATH=/home/yuanhui/Documents/JustAName && go install kademlia && ./bin/kademlia localhost:7890 localhost:7890
 test:
-	export GOPATH=/home/yuanhui/GitHub/JustAName && go test -race libkademlia
+	export GOPATH=/home/yuanhui/Documents/JustAName && go test -race libkademlia
