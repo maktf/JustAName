@@ -191,7 +191,9 @@ func (k *KademliaRPC) GetVDO(req GetVDORequest, res *GetVDOResult) error {
 	//         }
 	// }
 	key := req.VdoID
+	k.kademlia.RLock()
 	value, ok := k.kademlia.VDOs[key]
+	k.kademlia.RUnlock()
 	if ok {
 		res.MsgID = req.MsgID
 		res.VDO = value
