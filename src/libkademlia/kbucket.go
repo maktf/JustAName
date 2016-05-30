@@ -34,7 +34,6 @@ type KBuckets struct{
 	Manager *RequestManager
 
 	LocalTable map[ID]Value
-
 }
 
 //type Bucket []*Contact

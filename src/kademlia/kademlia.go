@@ -385,7 +385,53 @@ func executeLine(k *libkademlia.Kademlia, line string) (response string) {
 		} else {
 			response = fmt.Sprintf("OK: Found value %s at %s", value, id)
 		}
+	case toks[0] == "vanish":
+		if len(toks) != 5 {
+			response = "vanish [VDO ID] [data] [numberKeys] [threshold]"
+			return
+		}
+		VDOID, err := libkademlia.IDFromString(toks[1])
+		if err != nil {
+			response = "ERR: Provided an invalid VDO ID (" + toks[1] + ":)"
+			return
+ 		}
+ 		data, err := libkademlia.IDFromString(toks[2])
+ 		if err != nil {
+			response = "ERR: Provided an invalid data (" + toks[2] + ":)"
+			return 			
+ 		}
+ 		numberKeys, err := libkademlia.IDFromString(toks[3])
+ 		if err != nil {
+ 			response = "ERR: Provided an invalid numberKeys (" + toks[3] + ":)"
+ 			return
+ 		}
+ 		threshold, err := libkademlia.IDFromString(toks[4])
+ 		if err != nil {
+ 			response = "ERR: Provided an invalid threshold (" + toks[4] + ":)"
+ 			return
+ 		}
+// type VanashingDataObject struct {
+// 	AccessKey  int64
+// 	Ciphertext []byte
+// 	NumberKeys byte
+// 	Threshold  byte
+// }
+// type Kademlia struct {
+// 	NodeID      ID
+// 	SelfContact Contact
+// 	RM          *RequestManager
+// 	KB          *KBuckets
+// 	addVanashingDataObject chan *VanashingDataObject
+// 	removeVanashingDataObject chan *VanashingDataObject
+// }
 
+ 		vanashingDataObject := VanashingDataObject(VDOID, data, numberKeys, threshold)
+ 		k.addVanashingDataObject <- &vanashingDataObject
+	case toks[0] == "unvanish":
+		if len(toks) != 3 {
+			response = "unvanish [Node ID] [VDO ID]"
+			return
+		}
 	default:
 		response = "ERR: Unknown command"
 	}

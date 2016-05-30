@@ -167,8 +167,36 @@ type GetVDOResult struct {
 	MsgID ID
 	VDO   VanashingDataObject
 }
-
+// type Kademlia struct {
+// 	sync.RWMutex
+// 	NodeID      ID
+// 	SelfContact Contact
+// 	RM          *RequestManager
+// 	KB          *KBuckets
+// 	VDOs        map[ID]VanashingDataObject
+// }
 func (k *KademliaRPC) GetVDO(req GetVDORequest, res *GetVDOResult) error {
 	// TODO: Implement.
-	return nil
+	// package main
+
+	// import "fmt"
+
+	// func main() {
+	//         dict := map[string]int {"foo" : 1, "bar" : 2}
+	//         value, ok := dict["baz"]
+	//         if ok {
+	//                 fmt.Println("value: ", value)
+	//         } else {
+	//                 fmt.Println("key not found")
+	//         }
+	// }
+	key := req.VdoID
+	value, ok := k.kademlia.VDOs[key]
+	if ok {
+		res.MsgID = req.MsgID
+		res.VDO = value
+		return nil
+	} else {
+		return &CommandFailed{"VdoID not found"}
+	}
 }
