@@ -1,76 +1,48 @@
 package libkademlia
 
-type VDObj struct {
-	kademlia                               *Kademlia
-	table                                  map[ID]VanashingDataObject
-	DoStoreVDORequest                      chan *VanashingDataObject
-	DoGetVDORequestWithGetVDOResultChan    chan *GetVDORequestWithGetVDOResultChan
+type VDOReadReq struct {
+	key ID
+	reschan chan *VanashingDataObject
 }
 
-// type Kademlia struct {
-// 	NodeID      ID
-// 	SelfContact Contact
-// 	RM          *RequestManager
-// 	KB          *KBuckets
-// 	VDO         *VDObj
-// }
+type VDOWriteReq struct {
+	key ID
+	vdo *VanashingDataObject
+}
 
-// type GetVDORequest struct {
-// 	Sender Contact
-// 	VdoID  ID
-// 	MsgID  ID
-// }
+type VDOManager struct {
+	vdoht map[ID]*VanashingDataObject
+	readchan chan *VDOReadReq 
+	writechan chan *VDOWriteReq
+}
 
-// type GetVDOResult struct {
-// 	MsgID ID
-// 	VDO   VanashingDataObject
-// }
-
-// type GetVDORequestWithGetVDOResultChan struct {
-// 	getVDORequest        GetVDORequest
-// 	getVDOResultChan     chan GetVDOResult
-// }
-
-func (kademlia *Kademlia) StoreVDOGetVDOHandle () error {
-	go func() {
-		for {
-			select {
-				case doStoreVDORequest := <- kademlia.VDO.DoStoreVDORequest: {
-					kademlia.StoreVDO(doStoreVDORequest)
-					return nil
-				}
-				case doGetVDORequestWithGetVDOResultChan := <- kademlia.VDO.DoGetVDORequestWithGetVDOResultChan: {
-					contact = doGetVDORequestWithGetVDOResultChan.getVDORequest.Sender
-					client, err := rpc.DialHTTPPath("tcp", contact.Host.String()+":"+strconv.Itoa(int(contact.Port)),rpc.DefaultRPCPath+strconv.Itoa(int(contact.Port)))
-					if err != nil {
-						return &CommandFailed{"Uable to dail", err}
-					}
-					var reply error
-					err = client.Call("KademliaRPC.GetVDO", doGetVDORequestWithGetVDOResultChan, &reply)
-					if err != nil {
-						return &CommandFailed{"Uable to KademliaRPC.GetVDO", err}
-					}
-					if reply != nil {
-						return &CommandFailed{err}
-					}
-				}
-			}
+func (vm *VDOManager) HandleRequest() {
+	vm.vdoht = make(map[ID]*VanashingDataObject)
+	vm.readchan = make(chan *VDOReadReq)
+	vm.writechan = make(chan *VDOWriteReq)
+	for {
+		select {
+			case r := <- vm.readchan:
+			     res := new(VanashingDataObject)
+			     res.AccessKey = vm.vdoht[r.key].AccessKey
+			     res.NumberKeys = vm.vdoht[r.key].NumberKeys
+			     res.NumberKeys = vm.vdoht[r.key].Threshold
+			     res.Ciphertext = make([]byte, len(vm.vdoht[r.key].Ciphertext))
+			     copy(res.Ciphertext, vm.vdoht[r.key].Ciphertext)
+			     r.reschan <- res
+		    case w := <- vm.writechan:
+		         store := new(VanashingDataObject)
+		         store.AccessKey = w.vdo.AccessKey
+		         store.NumberKeys = w.vdo.NumberKeys
+		         store.Threshold = w.vdo.Threshold
+		         store.Ciphertext = make([]byte, len(w.vdo.Ciphertext))
+		         copy(store.Ciphertext, w.vdo.Ciphertext)
+		         vm.vdoht[w.key] = store
+		    default:
 		}
-	} ()
-}
-		// type VanashingDataObject struct {
-		// 	AccessKey  int64
-		// 	Ciphertext []byte
-		// 	NumberKeys byte
-		// 	Threshold  byte
-		// }
-func (kademlia *Kademlia) StoreVDO(value VanashingDataObject) error {
-	key := value.AccessKey
-	kademlia.VDO.table[key] = value
-	checkValue, ok := kademlia.VDO.table[key]
-	if ok && checkValue == value {
-		return nil
-	} else {
-		return &CommandFailed{"Uable to store StoreVDO pair"}
 	}
+}
+
+func (vm *VDOManager) Store(key ID, vdo *VanashingDataObject) {
+	vm.writechan <- &VDOWriteReq{key, vdo} 
 }
