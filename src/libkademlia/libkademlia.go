@@ -11,9 +11,6 @@ import (
 	"net/rpc"
 	"strconv"
 	"time"
-    // "runtime"
-    // "sync"
-    // "sync/atomic"
 )
 
 const (
@@ -24,17 +21,17 @@ const (
 
 // Kademlia type. You can put whatever state you need in this.
 type Kademlia struct {
-	// sync.RWMutex
 	NodeID      ID
 	SelfContact Contact
 	RM          *RequestManager
 	KB          *KBuckets
-	VDO         *VDObj
+	VM          *VDOManager
 }
 
 func NewKademliaWithId(laddr string, nodeID ID) *Kademlia {
 	k := new(Kademlia)
 	k.NodeID = nodeID
+	k.VM = new(VDOManager)
     k.RM = new(RequestManager)
     k.KB = new(KBuckets)
     k.RM.ResultChannels = make(map[string]chan *KResult)
@@ -82,6 +79,7 @@ func NewKademliaWithId(laddr string, nodeID ID) *Kademlia {
 	k.SelfContact = Contact{k.NodeID, host, uint16(port_int)}	
 	go k.RM.ManagerStart()
 	go k.KB.Run(k, k.RM)
+	go k.VM.HandleRequest()
 	return k
 }
 
@@ -258,7 +256,7 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
 		nocloser := false
 		for !sl.checkActive() && !nocloser {
 			//fmt.Println("\n\n")
-		    //sl.printStatus()
+		    sl.printStatus()
 		    //fmt.Println("\n\n")
 			f3 := sl.getAlphaNotContacted()
 			for _, c := range f3 {
@@ -473,13 +471,49 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 // For project 3!
 func (k *Kademlia) Vanish(data []byte, numberKeys byte,
 	threshold byte, timeoutSeconds int) (vdo VanashingDataObject) {
+	vdo = k.VanishData(data, numberKeys, threshold, timeoutSeconds)
 	return
 }
 
-func (k *Kademlia) Unvanish(searchKey ID) (data []byte) {
-	return nil
-}
-// VDOs        map[ID]VanashingDataObject
-func (k *Kademlia) DoStoreVDOs(key ID, vdo VanashingDataObject) {
+func (k *Kademlia) Unvanish(nodeID ID, vdoID ID) (data []byte) {
+	//GetVDO, UnvanishData, return the data
+	var res GetVDOResult
+		
+	contact, err := k.FindContact(nodeID)
 	
+	if err == nil {
+		client, err := rpc.DialHTTPPath("tcp", contact.Host.String()+":"+strconv.Itoa(int(contact.Port)),
+			rpc.DefaultRPCPath+strconv.Itoa(int(contact.Port)))
+	    if err != nil {
+	    	log.Fatal("dialing:", err)
+	    }
+	    
+	    err = client.Call("KademliaRPC.GetVDO", GetVDORequest{k.SelfContact, vdoID, NewRandomID()}, &res)
+	    
+	    if err == nil {
+	    	return k.UnvanishData(res.VDO)
+	    } 
+	} else {
+		contacts, err := k.DoIterativeFindNode(nodeID)
+		if err == nil {
+			for _, c := range contacts {
+				if c.NodeID.Equals(nodeID) {
+					client, err := rpc.DialHTTPPath("tcp", contact.Host.String()+":"+strconv.Itoa(int(contact.Port)),
+						rpc.DefaultRPCPath+strconv.Itoa(int(contact.Port)))
+					if err != nil {
+						log.Fatal("dialing:", err)
+					}
+					
+					err = client.Call("KademliaRPC.GetVDO", GetVDORequest{k.SelfContact, vdoID, NewRandomID()}, &res)
+					if err == nil {
+						return k.UnvanishData(res.VDO)
+					} else {
+						return nil
+					}
+				}
+			} 
+		}
+	}
+	
+	return nil
 }
