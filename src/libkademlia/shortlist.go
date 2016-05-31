@@ -1,5 +1,9 @@
 package libkademlia
 
+import(
+	"fmt"
+)
+
 type ShortList struct{
 	active map[string]bool
 	list map[string]*Contact
