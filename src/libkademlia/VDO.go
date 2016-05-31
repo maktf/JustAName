@@ -45,7 +45,14 @@ func (kademlia *Kademlia) StoreVDOGetVDOHandle () error {
 					if err != nil {
 						return &CommandFailed{"Uable to dail", err}
 					}
-					
+					var reply error
+					err = client.Call("KademliaRPC.GetVDO", doGetVDORequestWithGetVDOResultChan, &reply)
+					if err != nil {
+						return &CommandFailed{"Uable to KademliaRPC.GetVDO", err}
+					}
+					if reply != nil {
+						return &CommandFailed{err}
+					}
 				}
 			}
 		}
