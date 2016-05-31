@@ -167,6 +167,13 @@ type GetVDOResult struct {
 	MsgID ID
 	VDO   VanashingDataObject
 }
+
+type GetVDORequestWithGetVDOResultChan struct {
+	getVDORequest        GetVDORequest
+	getVDOResultChan     chan GetVDOResult
+}
+
+
 // type Kademlia struct {
 // 	sync.RWMutex
 // 	NodeID      ID
@@ -175,28 +182,25 @@ type GetVDOResult struct {
 // 	KB          *KBuckets
 // 	VDOs        map[ID]VanashingDataObject
 // }
-func (k *KademliaRPC) GetVDO(req GetVDORequest, res *GetVDOResult) error {
-	// TODO: Implement.
-	// package main
+// func (k *KademliaRPC) GetVDO(req GetVDORequest, res *GetVDOResult) error {
+// 	// TODO: Implement.
+// 	key := req.VdoID
+// 	value, ok := k.kademlia.VDO.table[key]
+// 	if ok {
+// 		res.MsgID = req.MsgID
+// 		res.VDO = value
+// 		return nil
+// 	} else {
+// 		return &CommandFailed{"VdoID not found"}
+// 	}
+// }
 
-	// import "fmt"
-
-	// func main() {
-	//         dict := map[string]int {"foo" : 1, "bar" : 2}
-	//         value, ok := dict["baz"]
-	//         if ok {
-	//                 fmt.Println("value: ", value)
-	//         } else {
-	//                 fmt.Println("key not found")
-	//         }
-	// }
-	key := req.VdoID
-	k.kademlia.RLock()
-	value, ok := k.kademlia.VDOs[key]
-	k.kademlia.RUnlock()
+func (kademliaRPC *KademliaRPC) GetVDO(request *GetVDORequestWithGetVDOResultChan) error {
+	key := request.getVDORequest.VdoID
+	value, ok := kademliaRPC.kademlia.table[key]
 	if ok {
-		res.MsgID = req.MsgID
-		res.VDO = value
+		getVDOResult := GetVDOResult(request.getVDORequest.MsgID, value)
+		request.getVDOResultChan <- getVDOResult
 		return nil
 	} else {
 		return &CommandFailed{"VdoID not found"}

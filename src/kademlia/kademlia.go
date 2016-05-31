@@ -390,48 +390,37 @@ func executeLine(k *libkademlia.Kademlia, line string) (response string) {
 			response = "vanish [VDO ID] [data] [numberKeys] [threshold]"
 			return
 		}
-		VDOID, err := libkademlia.IDFromString(toks[1])
+		accessKey, err := strconv.ParseInt(toks[1], 10, 64)
+		// https://golang.org/pkg/strconv/
 		if err != nil {
-			response = "ERR: Provided an invalid VDO ID (" + toks[1] + ":)"
+			response = "Unable to convert string to int64"
 			return
- 		}
- 		data, err := libkademlia.IDFromString(toks[2])
- 		if err != nil {
-			response = "ERR: Provided an invalid data (" + toks[2] + ":)"
-			return 			
- 		}
- 		numberKeys, err := libkademlia.IDFromString(toks[3])
- 		if err != nil {
- 			response = "ERR: Provided an invalid numberKeys (" + toks[3] + ":)"
- 			return
- 		}
- 		threshold, err := libkademlia.IDFromString(toks[4])
- 		if err != nil {
- 			response = "ERR: Provided an invalid threshold (" + toks[4] + ":)"
- 			return
- 		}
-// type VanashingDataObject struct {
-// 	AccessKey  int64
-// 	Ciphertext []byte
-// 	NumberKeys byte
-// 	Threshold  byte
-// }
-// type Kademlia struct {
-// 	NodeID      ID
-// 	SelfContact Contact
-// 	RM          *RequestManager
-// 	KB          *KBuckets
-// 	addVanashingDataObject chan *VanashingDataObject
-// 	removeVanashingDataObject chan *VanashingDataObject
-// }
-
- 		vanashingDataObject := VanashingDataObject(VDOID, data, numberKeys, threshold)
- 		k.addVanashingDataObject <- &vanashingDataObject
+		}
+		ciphertext := []byte(toks[2])
+		numberKeys := byte(toks[3])
+		threshold := byte(toks[4])
+		// type VanashingDataObject struct {
+		// 	AccessKey  int64
+		// 	Ciphertext []byte
+		// 	NumberKeys byte
+		// 	Threshold  byte
+		// }
+		// type Kademlia struct {
+		// 	// sync.RWMutex
+		// 	NodeID      ID
+		// 	SelfContact Contact
+		// 	RM          *RequestManager
+		// 	KB          *KBuckets
+		// 	VDO         *VDObj
+		// }
+ 		vanashingDataObject := VanashingDataObject(accessKey, ciphertext, numberKeys, threshold)
+ 		k.VDO.DoStoreVDORequest <- vanashingDataObject
 	case toks[0] == "unvanish":
 		if len(toks) != 3 {
 			response = "unvanish [Node ID] [VDO ID]"
 			return
 		}
+		
 	default:
 		response = "ERR: Unknown command"
 	}

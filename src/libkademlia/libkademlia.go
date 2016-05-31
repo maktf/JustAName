@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"time"
     // "runtime"
-    "sync"
+    // "sync"
     // "sync/atomic"
 )
 
@@ -24,12 +24,12 @@ const (
 
 // Kademlia type. You can put whatever state you need in this.
 type Kademlia struct {
-	sync.RWMutex
+	// sync.RWMutex
 	NodeID      ID
 	SelfContact Contact
 	RM          *RequestManager
 	KB          *KBuckets
-	VDOs        map[ID]VanashingDataObject
+	VDO         *VDObj
 }
 
 func NewKademliaWithId(laddr string, nodeID ID) *Kademlia {
@@ -480,12 +480,6 @@ func (k *Kademlia) Unvanish(searchKey ID) (data []byte) {
 	return nil
 }
 // VDOs        map[ID]VanashingDataObject
-func (k *Kademlia) InitializeVDOs() {
-	k.VDOs = make(map[ID]VanashingDataObject)
-}
-
 func (k *Kademlia) DoStoreVDOs(key ID, vdo VanashingDataObject) {
-	k.Lock()
-	k.VDOs[key] = vdo
-	k.Unlock()
+	
 }
