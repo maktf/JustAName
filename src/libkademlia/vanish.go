@@ -7,7 +7,8 @@ import (
 	"io"
 	mathrand "math/rand"
 	"time"
-	//"sss"
+	"sss"
+	"log"
 )
 
 type VanashingDataObject struct {
@@ -74,9 +75,52 @@ func decrypt(key []byte, ciphertext []byte) (text []byte) {
 
 func (k *Kademlia) VanishData(data []byte, numberKeys byte,
 	threshold byte, timeoutSeconds int) (vdo VanashingDataObject) {
+	ckey := GenerateRandomCryptoKey()
+	vdo.Ciphertext = encrypt(ckey, data)
+	vdo.NumberKeys = numberKeys
+	vdo.Threshold = threshold
+	keys, err := sss.Split(numberKeys, threshold, ckey)
+	if err != nil {
+		log.Fatal("NumberKeys or threshold is invalid\n")
+	} 
+	
+	akey := GenerateRandomAccessKey()
+	locs := CalculateSharedKeyLocations(akey, int64(numberKeys))
+	i := 0
+	for key, vs := range keys {
+		value := []byte{key}
+		for _, v := range vs {
+			value = append(value, v)
+		}
+		_, err := k.DoIterativeStore(locs[i], value)   //what if an error occurs?
+		if err != nil {
+			log.Fatal("Fail to store shared keys.\n") 
+		}
+		i++;
+	}
 	return
 }
 
 func (k *Kademlia) UnvanishData(vdo VanashingDataObject) (data []byte) {
-	return nil
+	locs := CalculateSharedKeyLocations(vdo.AccessKey, int64(vdo.NumberKeys))
+	th := int(vdo.Threshold)
+	i := 0
+	keys := make(map[byte][]byte)
+	for _, l := range locs {
+		_, v, err := k.DoIterativeFindValue(l)
+		if err == nil {
+			keys[v[0]] = v[1:]
+			i++
+		}
+		if i == th {
+			break
+		}
+	}
+	
+	if i == th {
+		ckey := sss.Combine(keys)
+		return decrypt(ckey, vdo.Ciphertext)
+	} else {
+		return nil
+	}
 }
