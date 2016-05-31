@@ -168,41 +168,17 @@ type GetVDOResult struct {
 	VDO   VanashingDataObject
 }
 
-type GetVDORequestWithGetVDOResultChan struct {
-	getVDORequest        GetVDORequest
-	getVDOResultChan     chan GetVDOResult
-}
-
-
-// type Kademlia struct {
-// 	sync.RWMutex
-// 	NodeID      ID
-// 	SelfContact Contact
-// 	RM          *RequestManager
-// 	KB          *KBuckets
-// 	VDOs        map[ID]VanashingDataObject
-// }
-// func (k *KademliaRPC) GetVDO(req GetVDORequest, res *GetVDOResult) error {
-// 	// TODO: Implement.
-// 	key := req.VdoID
-// 	value, ok := k.kademlia.VDO.table[key]
-// 	if ok {
-// 		res.MsgID = req.MsgID
-// 		res.VDO = value
-// 		return nil
-// 	} else {
-// 		return &CommandFailed{"VdoID not found"}
-// 	}
-// }
-
-func (kademliaRPC *KademliaRPC) GetVDO(request *GetVDORequestWithGetVDOResultChan) error {
-	key := request.getVDORequest.VdoID
-	value, ok := kademliaRPC.kademlia.table[key]
-	if ok {
-		getVDOResult := GetVDOResult(request.getVDORequest.MsgID, value)
-		request.getVDOResultChan <- getVDOResult
-		return nil
-	} else {
-		return &CommandFailed{"VdoID not found"}
+func (k *KademliaRPC) GetVDO(req GetVDORequest, res *GetVDOResult) error {
+	// TODO: Implement.
+	reschan := make(chan *VanashingDataObject)
+	k.kademlia.VM.readchan <- &VDOReadReq{req.VdoID, reschan}
+	res.MsgID = CopyID(req.MsgID)
+	for {
+		select{
+			case r := <- reschan:
+			     res.VDO = *r
+			     return nil
+		        default:			     
+		}
 	}
 }
