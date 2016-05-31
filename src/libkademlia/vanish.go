@@ -85,6 +85,7 @@ func (k *Kademlia) VanishData(data []byte, numberKeys byte,
 	} 
 	
 	akey := GenerateRandomAccessKey()
+	vdo.AccessKey = akey
 	locs := CalculateSharedKeyLocations(akey, int64(numberKeys))
 	i := 0
 	for key, vs := range keys {
