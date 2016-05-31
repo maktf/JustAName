@@ -385,7 +385,42 @@ func executeLine(k *libkademlia.Kademlia, line string) (response string) {
 		} else {
 			response = fmt.Sprintf("OK: Found value %s at %s", value, id)
 		}
-
+	case toks[0] == "vanish":
+		if len(toks) != 5 {
+			response = "vanish [VDO ID] [data] [numberKeys] [threshold]"
+			return
+		}
+		accessKey, err := strconv.ParseInt(toks[1], 10, 64)
+		// https://golang.org/pkg/strconv/
+		if err != nil {
+			response = "Unable to convert string to int64"
+			return
+		}
+		ciphertext := []byte(toks[2])
+		numberKeys := byte(toks[3])
+		threshold := byte(toks[4])
+		// type VanashingDataObject struct {
+		// 	AccessKey  int64
+		// 	Ciphertext []byte
+		// 	NumberKeys byte
+		// 	Threshold  byte
+		// }
+		// type Kademlia struct {
+		// 	// sync.RWMutex
+		// 	NodeID      ID
+		// 	SelfContact Contact
+		// 	RM          *RequestManager
+		// 	KB          *KBuckets
+		// 	VDO         *VDObj
+		// }
+ 		vanashingDataObject := VanashingDataObject(accessKey, ciphertext, numberKeys, threshold)
+ 		k.VDO.DoStoreVDORequest <- vanashingDataObject
+	case toks[0] == "unvanish":
+		if len(toks) != 3 {
+			response = "unvanish [Node ID] [VDO ID]"
+			return
+		}
+		
 	default:
 		response = "ERR: Unknown command"
 	}
