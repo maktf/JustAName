@@ -385,42 +385,52 @@ func executeLine(k *libkademlia.Kademlia, line string) (response string) {
 		} else {
 			response = fmt.Sprintf("OK: Found value %s at %s", value, id)
 		}
-	case toks[0] == "vanish":
-		if len(toks) != 5 {
-			response = "vanish [VDO ID] [data] [numberKeys] [threshold]"
+    case toks[0] == "vanish":
+        if len(toks) != 5 {
+        	response = "usage: vanish [VDO ID] [data] [numberKeys] [threshold]"
+        	return
+        }
+        t3, e1 := strconv.ParseInt(toks[3], 10, 32)
+        if e1 != nil {
+			response = "ERR: Provided an invalid numberKeys (" + toks[3] + ")"
 			return
 		}
-		accessKey, err := strconv.ParseInt(toks[1], 10, 64)
-		// https://golang.org/pkg/strconv/
-		if err != nil {
-			response = "Unable to convert string to int64"
+        t4, e2 := strconv.ParseInt(toks[4], 10, 32)
+        if e2 != nil {
+			response = "ERR: Provided an invalid threshold (" + toks[4] + ")"
+			return
+		}        
+        id, err := libkademlia.IDFromString(toks[1])
+        if err != nil {
+			response = "ERR: Provided an invalid VDO ID (" + toks[1] + ")"
 			return
 		}
-		ciphertext := []byte(toks[2])
-		numberKeys := byte(toks[3])
-		threshold := byte(toks[4])
-		// type VanashingDataObject struct {
-		// 	AccessKey  int64
-		// 	Ciphertext []byte
-		// 	NumberKeys byte
-		// 	Threshold  byte
-		// }
-		// type Kademlia struct {
-		// 	// sync.RWMutex
-		// 	NodeID      ID
-		// 	SelfContact Contact
-		// 	RM          *RequestManager
-		// 	KB          *KBuckets
-		// 	VDO         *VDObj
-		// }
- 		vanashingDataObject := VanashingDataObject(accessKey, ciphertext, numberKeys, threshold)
- 		k.VDO.DoStoreVDORequest <- vanashingDataObject
-	case toks[0] == "unvanish":
-		if len(toks) != 3 {
-			response = "unvanish [Node ID] [VDO ID]"
+        
+        vdo := k.Vanish([]byte(toks[2]), byte(t3), byte(t4), 0);   //interface in libkademlia.go
+        k.VM.Store(id, &vdo)
+        response = fmt.Sprintf("VDO store at %s", toks[1])
+    case toks[0] == "unvanish":
+         if len(toks) != 3 {
+         	response = "usage: unvanish [Node ID] [VDO ID]"
+         	return
+         }
+         nodeID, err := libkademlia.IDFromString(toks[1])
+         if err != nil {
+         	response = "ERR: Provided an invalid node ID (" + toks[1] + ")"
 			return
-		}
-		
+		 }        
+         vdoID, err1 := libkademlia.IDFromString(toks[2])
+         if err1 != nil {
+         	response = "ERR: Provided an invalid vdo ID (" + toks[2] + ")"
+			return
+		 }
+         
+         data := k.Unvanish(nodeID, vdoID)
+         if data != nil {
+         	response = fmt.Sprintf("Text decrypted as: %s", string(data)) 
+         } else {
+         	response = "Can't find or decrypt the text"
+         }
 	default:
 		response = "ERR: Unknown command"
 	}
