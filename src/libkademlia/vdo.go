@@ -26,7 +26,7 @@ func (vm *VDOManager) HandleRequest() {
 			     res := new(VanashingDataObject)
 			     res.AccessKey = vm.vdoht[r.key].AccessKey
 			     res.NumberKeys = vm.vdoht[r.key].NumberKeys
-			     res.NumberKeys = vm.vdoht[r.key].Threshold
+			     res.Threshold = vm.vdoht[r.key].Threshold
 			     res.Ciphertext = make([]byte, len(vm.vdoht[r.key].Ciphertext))
 			     copy(res.Ciphertext, vm.vdoht[r.key].Ciphertext)
 			     r.reschan <- res
