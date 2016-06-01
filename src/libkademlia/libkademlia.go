@@ -128,7 +128,7 @@ func (k *Kademlia) DoPing(host net.IP, port uint16) (*Contact, error) {
 
 	client, err := rpc.DialHTTPPath("tcp", host.String()+":"+strconv.Itoa(int(port)),rpc.DefaultRPCPath+strconv.Itoa(int(port)))
 	if err != nil {
-		log.Fatal("dialing:", err)
+		return nil, &CommandFailed{"Contact doesn't exist"}
 	}
 	var reply PongMessage
 	
@@ -151,7 +151,7 @@ func (k *Kademlia) DoPing(host net.IP, port uint16) (*Contact, error) {
 func (k *Kademlia) DoStore(contact *Contact, key ID, value []byte) error {
 	client, err := rpc.DialHTTPPath("tcp", contact.Host.String()+":"+strconv.Itoa(int(contact.Port)),rpc.DefaultRPCPath+strconv.Itoa(int(contact.Port)))
 	if err != nil {
-		log.Fatal("dialing:", err)
+		return &CommandFailed{"Contact doesn't exist"}
 	}
 	var reply StoreResult
 	
@@ -172,7 +172,7 @@ func (k *Kademlia) DoFindNode(contact *Contact, searchKey ID) ([]Contact, error)
 	client, err := rpc.DialHTTPPath("tcp", contact.Host.String()+":"+strconv.Itoa(int(contact.Port)),
 		rpc.DefaultRPCPath+strconv.Itoa(int(contact.Port)))
 	if err != nil {
-		log.Fatal("dialing", err)
+		return nil, &CommandFailed{"Contact doesn't exist"}
 	} 
 	findNodeRequest := FindNodeRequest{k.SelfContact, NewRandomID(), searchKey}
 	var findNodeResult FindNodeResult
@@ -203,7 +203,7 @@ func (k *Kademlia) DoFindValue(contact *Contact,
 	client, err := rpc.DialHTTPPath("tcp", contact.Host.String()+":"+strconv.Itoa(int(contact.Port)),
 		rpc.DefaultRPCPath+strconv.Itoa(int(contact.Port)))
 	if err != nil {
-		log.Fatal("dialing:", err)
+		return nil, nil, &CommandFailed{"Contact doesn't exist"}
 	}
 	var res FindValueResult
 
@@ -480,8 +480,8 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 
 // For project 3!
 func (k *Kademlia) Vanish(data []byte, numberKeys byte,
-	threshold byte, timeoutSeconds int) (vdo VanashingDataObject) {
-	vdo = k.VanishData(data, numberKeys, threshold, timeoutSeconds)
+	threshold byte, timeoutSeconds int) (vdo VanashingDataObject, err error) {
+	vdo, err = k.VanishData(data, numberKeys, threshold, timeoutSeconds)
 	return
 }
 
