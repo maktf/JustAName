@@ -176,8 +176,12 @@ func (k *KademliaRPC) GetVDO(req GetVDORequest, res *GetVDOResult) error {
 	for {
 		select{
 			case r := <- reschan:
-			     res.VDO = *r
-			     return nil
+			     if r != nil{
+			     	res.VDO = *r
+			     	return nil
+			     } else {
+			     	return &CommandFailed{"Key not found"}
+			     }
 		        default:			     
 		}
 	}
