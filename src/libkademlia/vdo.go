@@ -100,13 +100,17 @@ func (vm *VDOManager) HandleRequest(k *Kademlia) {
 				}
 
 			case r := <- vm.readchan:
-			     res := new(VanashingDataObject)
-			     res.AccessKey = vm.vdoht[r.key].AccessKey
-			     res.NumberKeys = vm.vdoht[r.key].NumberKeys
-			     res.Threshold = vm.vdoht[r.key].Threshold
-			     res.Ciphertext = make([]byte, len(vm.vdoht[r.key].Ciphertext))
-			     copy(res.Ciphertext, vm.vdoht[r.key].Ciphertext)
-			     r.reschan <- res
+			     if _, ok := vm.vdoht[r.key]; ok {
+			     	res := new(VanashingDataObject)
+			     	res.AccessKey = vm.vdoht[r.key].AccessKey
+			     	res.NumberKeys = vm.vdoht[r.key].NumberKeys
+			     	res.Threshold = vm.vdoht[r.key].Threshold
+			     	res.Ciphertext = make([]byte, len(vm.vdoht[r.key].Ciphertext))
+			     	copy(res.Ciphertext, vm.vdoht[r.key].Ciphertext)
+			     	r.reschan <- res
+			     } else {
+			     	r.reschan <- nil        
+			     }	
 		    case w := <- vm.writechan:
 		         store := new(VanashingDataObject)
 		         store.AccessKey = w.vdo.AccessKey
