@@ -75,14 +75,14 @@ func decrypt(key []byte, ciphertext []byte) (text []byte) {
 }
 
 func (k *Kademlia) VanishData(data []byte, numberKeys byte,
-	threshold byte, timeoutSeconds int) (vdo VanashingDataObject) {
+	threshold byte, timeoutSeconds int) (vdo VanashingDataObject, err1 error) {
 	ckey := GenerateRandomCryptoKey()
 	vdo.Ciphertext = encrypt(ckey, data)
 	vdo.NumberKeys = numberKeys
 	vdo.Threshold = threshold
 	keys, err := sss.Split(numberKeys, threshold, ckey)
 	if err != nil {
-		log.Fatal("NumberKeys or threshold is invalid\n")
+		return vdo, &CommandFailed{"NumberKeys or threshold is invalid"}
 	} 
 	
 	akey := GenerateRandomAccessKey()
@@ -94,14 +94,14 @@ func (k *Kademlia) VanishData(data []byte, numberKeys byte,
 		for _, v := range vs {
 			value = append(value, v)
 		}
-		_, err := k.DoIterativeStore(locs[i], value)   //what if an error occurs?
-		if err != nil {
-			log.Fatal("Fail to store shared keys.\n") 
+		cs, err := k.DoIterativeStore(locs[i], value)   //what if an error occurs?
+		if err != nil || len(cs) ==0 {
+			return vdo, &CommandFailed{"Failed to store shared keys"}
 		}
 		i++;
 	}
 	vdo.TimeOut = int64(timeoutSeconds)
-	return
+	return vdo, nil
 }
 
 func (k *Kademlia) UnvanishData(vdo VanashingDataObject) (data []byte) {
