@@ -79,7 +79,8 @@ func NewKademliaWithId(laddr string, nodeID ID) *Kademlia {
 	k.SelfContact = Contact{k.NodeID, host, uint16(port_int)}	
 	go k.RM.ManagerStart()
 	go k.KB.Run(k, k.RM)
-	go k.VM.HandleRequest()
+	go k.VM.HandleRequest(k)
+	go k.VM.CheckRefresh()
 	return k
 }
 
@@ -405,7 +406,12 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 							}
 						}
 					}
-					k.DoStore(toStore,key,v_found)
+					//fmt.Println(toStore)
+					//fmt.Println(key)
+					//fmt.Println(v_found)
+					if toStore != nil{
+						k.DoStore(toStore,key,v_found)
+					}
 					return id_found, v_found, nil                         ///need modification: store the value in the closest node!!!!!!
 				}
 			}
@@ -455,7 +461,9 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 							}
 						}
 					}
-					k.DoStore(toStore,key,v_found)
+					if toStore != nil {
+						k.DoStore(toStore,key,v_found)
+					}
 					return id_found, v_found, nil                                ///need modification: store the value in the closest node!!!!
 				}
 			}

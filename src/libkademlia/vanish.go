@@ -16,6 +16,7 @@ type VanashingDataObject struct {
 	Ciphertext []byte
 	NumberKeys byte
 	Threshold  byte
+	TimeOut int64
 }
 
 func GenerateRandomCryptoKey() (ret []byte) {
@@ -31,8 +32,8 @@ func GenerateRandomAccessKey() (accessKey int64) {
 	return
 }
 
-func CalculateSharedKeyLocations(accessKey int64, count int64) (ids []ID) {
-	r := mathrand.New(mathrand.NewSource(accessKey))
+func CalculateSharedKeyLocations(accessKey int64, count int64, epoch int64) (ids []ID) {
+	r := mathrand.New(mathrand.NewSource(accessKey+epoch))
 	ids = make([]ID, count)
 	for i := int64(0); i < count; i++ {
 		for j := 0; j < IDBytes; j++ {
@@ -86,7 +87,7 @@ func (k *Kademlia) VanishData(data []byte, numberKeys byte,
 	
 	akey := GenerateRandomAccessKey()
 	vdo.AccessKey = akey
-	locs := CalculateSharedKeyLocations(akey, int64(numberKeys))
+	locs := CalculateSharedKeyLocations(akey, int64(numberKeys), k.VM.epoch)
 	i := 0
 	for key, vs := range keys {
 		value := []byte{key}
@@ -99,11 +100,12 @@ func (k *Kademlia) VanishData(data []byte, numberKeys byte,
 		}
 		i++;
 	}
+	vdo.TimeOut = int64(timeoutSeconds)
 	return
 }
 
 func (k *Kademlia) UnvanishData(vdo VanashingDataObject) (data []byte) {
-	locs := CalculateSharedKeyLocations(vdo.AccessKey, int64(vdo.NumberKeys))
+	locs := CalculateSharedKeyLocations(vdo.AccessKey, int64(vdo.NumberKeys), k.VM.epoch)
 	th := int(vdo.Threshold)
 	i := 0
 	keys := make(map[byte][]byte)

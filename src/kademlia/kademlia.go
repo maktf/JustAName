@@ -406,7 +406,7 @@ func executeLine(k *libkademlia.Kademlia, line string) (response string) {
 			return
 		}
         
-        vdo := k.Vanish([]byte(toks[2]), byte(t3), byte(t4), 0);   //interface in libkademlia.go
+        vdo := k.Vanish([]byte(toks[2]), byte(t3), byte(t4), 5);   //interface in libkademlia.go
         k.VM.Store(id, &vdo)
         response = fmt.Sprintf("VDO store at %s", toks[1])
     case toks[0] == "unvanish":
