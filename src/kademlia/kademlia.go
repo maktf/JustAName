@@ -406,9 +406,13 @@ func executeLine(k *libkademlia.Kademlia, line string) (response string) {
 			return
 		}
         
-        vdo := k.Vanish([]byte(toks[2]), byte(t3), byte(t4), 5);   //interface in libkademlia.go
-        k.VM.Store(id, &vdo)
-        response = fmt.Sprintf("VDO store at %s", toks[1])
+        vdo, err1 := k.Vanish([]byte(toks[2]), byte(t3), byte(t4), 5);   //interface in libkademlia.go
+        if err1 == nil {
+        	k.VM.Store(id, &vdo)
+        	response = fmt.Sprintf("VDO store at %s", toks[1])
+        } else {
+        	response = fmt.Sprintf("VDO store failed: %s", err1)  
+        }
     case toks[0] == "unvanish":
          if len(toks) != 3 {
          	response = "usage: unvanish [Node ID] [VDO ID]"
