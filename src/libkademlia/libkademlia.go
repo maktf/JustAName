@@ -409,6 +409,7 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 					//fmt.Println(toStore)
 					//fmt.Println(key)
 					//fmt.Println(v_found)
+					//toStore may be nil when using vanish
 					if toStore != nil{
 						k.DoStore(toStore,key,v_found)
 					}
@@ -461,6 +462,7 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 							}
 						}
 					}
+					//toStore may be nil when using vanish
 					if toStore != nil {
 						k.DoStore(toStore,key,v_found)
 					}
