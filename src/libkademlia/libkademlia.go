@@ -245,9 +245,8 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
 	cs, err := k.DoFindNode(&k.SelfContact, id)
 	if err == nil{
 		var cs_a []*Contact
-		for _, c := range cs {
-			cs_a = append(cs_a, &c)
-			//fmt.Println("initial ",c.NodeID.AsString())
+		for i := 0; i < len(cs); i++ {
+			cs_a = append(cs_a, &cs[i])
 		}
 		sl := new(ShortList)
 		sl.initializeShortList(cs_a, id)
@@ -266,7 +265,6 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
 			}
 			count = 0
 			nocloser = true
-			//fmt.Println("---------------------------")
 			for count < len(f3) {
 				select {
 					case fnr := <- chnn:
@@ -291,7 +289,6 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
 		
 		//fmt.Println("\n\n")
 		//sl.printStatus()
-		
 		for !sl.checkActive() {
 			cs_a = sl.getAllNotContacted()
 			if len(cs_a) == 0 {
@@ -317,6 +314,7 @@ func (k *Kademlia) DoIterativeFindNode(id ID) ([]*Contact, error) {
 					     }
 					     count++
 				    default:
+				       
 				}
 			}
 		}
@@ -351,8 +349,8 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 			return k.SelfContact.NodeID.AsString(), vs, nil                              //the value is found at local
 		} else {
 			var cs_a []*Contact
-			for _, c := range cs {
-				cs_a = append(cs_a, &c)
+			for i := 0; i < len(cs); i++ {
+				cs_a = append(cs_a, &cs[i])
 			}
 			sl := new(ShortList)
 			sl.initializeShortList(cs_a, key)           //initialize shortlist
@@ -406,10 +404,7 @@ func (k *Kademlia) DoIterativeFindValue(key ID) (id string, value []byte, err er
 							}
 						}
 					}
-					//fmt.Println(toStore)
-					//fmt.Println(key)
-					//fmt.Println(v_found)
-					//toStore may be nil when using vanish
+					
 					if toStore != nil{
 						k.DoStore(toStore,key,v_found)
 					}
@@ -495,7 +490,7 @@ func (k *Kademlia) Unvanish(nodeID ID, vdoID ID) (data []byte) {
 		client, err := rpc.DialHTTPPath("tcp", contact.Host.String()+":"+strconv.Itoa(int(contact.Port)),
 			rpc.DefaultRPCPath+strconv.Itoa(int(contact.Port)))
 	    if err != nil {
-	    	log.Fatal("dialing:", err)
+	    	return nil
 	    }
 	    
 	    err = client.Call("KademliaRPC.GetVDO", GetVDORequest{k.SelfContact, vdoID, NewRandomID()}, &res)
@@ -508,10 +503,10 @@ func (k *Kademlia) Unvanish(nodeID ID, vdoID ID) (data []byte) {
 		if err == nil {
 			for _, c := range contacts {
 				if c.NodeID.Equals(nodeID) {
-					client, err := rpc.DialHTTPPath("tcp", contact.Host.String()+":"+strconv.Itoa(int(contact.Port)),
-						rpc.DefaultRPCPath+strconv.Itoa(int(contact.Port)))
+					client, err := rpc.DialHTTPPath("tcp", c.Host.String()+":"+strconv.Itoa(int(c.Port)),
+						rpc.DefaultRPCPath+strconv.Itoa(int(c.Port)))
 					if err != nil {
-						log.Fatal("dialing:", err)
+						return nil
 					}
 					
 					err = client.Call("KademliaRPC.GetVDO", GetVDORequest{k.SelfContact, vdoID, NewRandomID()}, &res)
