@@ -54,11 +54,11 @@ func (vm *VDOManager) HandleRequest(k *Kademlia) {
 			case r := <- vm.refreshchan:
 				vm.epoch = time.Now().Unix()/28800
 				res := new(VanashingDataObject)
-			     res.AccessKey = vm.vdoht[r].AccessKey
-			     res.NumberKeys = vm.vdoht[r].NumberKeys
-			     res.Threshold = vm.vdoht[r].Threshold
-			     res.Ciphertext = make([]byte, len(vm.vdoht[r].Ciphertext))
-			     copy(res.Ciphertext, vm.vdoht[r].Ciphertext)
+			    res.AccessKey = vm.vdoht[r].AccessKey
+			    res.NumberKeys = vm.vdoht[r].NumberKeys
+			    res.Threshold = vm.vdoht[r].Threshold
+			    res.Ciphertext = make([]byte, len(vm.vdoht[r].Ciphertext))
+			    copy(res.Ciphertext, vm.vdoht[r].Ciphertext)
 			    locs := CalculateSharedKeyLocations(res.AccessKey, int64(res.NumberKeys),vm.epoch)
 				th := int(res.Threshold)
 				i := 0
@@ -97,6 +97,11 @@ func (vm *VDOManager) HandleRequest(k *Kademlia) {
 					vm.vdotimeset[r] = time.Now().Unix()
 					fmt.Println("VDO refresh", r.AsString())
 					vm.informchan <- 1
+				}else{
+					delete(vm.vdotimeset, r)
+					delete(vm.vdoht, r)
+					vm.informchan <- 1
+					fmt.Println("One vdo can not be retrieved anymore",r.AsString())
 				}
 
 			case r := <- vm.readchan:

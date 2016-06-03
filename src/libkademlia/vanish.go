@@ -8,7 +8,6 @@ import (
 	mathrand "math/rand"
 	"time"
 	"sss"
-	"log"
 )
 
 type VanashingDataObject struct {
